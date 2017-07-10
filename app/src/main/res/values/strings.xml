@@ -14,4 +14,8 @@
     <string name="price_tools_value">145</string>
     <!-- Sale Button Text -->
     <string name="sale_text">Sale</string>
+    <!-- Label for overflow menu option that inserts fake pet data into the app [CHAR LIMIT=20] -->
+    <string name="action_insert_dummy_data">Insert dummy data</string>
+    <!-- Label for overflow menu option that deletes all product data in the app [CHAR LIMIT=20] -->
+    <string name="action_delete_all_entries">Delete All Products</string>
 </resources>
