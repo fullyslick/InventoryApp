@@ -18,6 +18,7 @@ public class ProductContract {
      * the content provider.
      */
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
+
     // Possible path (appended to base content URI for possible URI's)
     public static final String PATH_PRODUCTS = "products";
 
