@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="@dimen/standard_padding">
+
+    <ImageView
+        android:id="@+id/list_item_photo"
+        style="@style/ListItemPhotoStyling" />
+
+    <LinearLayout style="@style/ListItemTextHolderStyling">
+
+        <TextView
+            android:id="@+id/product_name"
+            style="@style/ProductDetailsStyling"
+            tools:text="@string/product_name_tools" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/ProductDetailsStyling"
+                android:text="@string/quantity_text" />
+
+            <TextView
+                android:id="@+id/quantity"
+                style="@style/ProductDetailsStyling"
+                tools:text="@string/quantity_tools_value" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                style="@style/ProductDetailsStyling"
+                android:text="@string/price_text" />
+
+            <TextView
+                android:id="@+id/price"
+                style="@style/ProductDetailsStyling"
+                tools:text="@string/price_tools_value" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/sale_button"
+        style="@style/SaleButtonStyling"
+        android:text="@string/sale_text" />
+</LinearLayout>

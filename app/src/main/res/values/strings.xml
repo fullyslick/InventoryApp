@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">InventoryApp</string>
+    <!-- Message with instructions on how to populate the database-->
+    <string name="empty_view_message">To insert a product into the database, please tap the plus button.</string>
+    <!-- Product Name tools:text -->
+    <string name="product_name_tools">Product Name</string>
+    <!-- Quantity Text of a product -->
+    <string name="quantity_text">Quantity:&#032;&#032;</string>
+    <!-- Quantity of Product tools:text-->
+    <string name="quantity_tools_value">8</string>
+    <!-- Price Text -->
+    <string name="price_text">Price:  €&#032;</string>
+    <!-- Price of Product tools:text-->
+    <string name="price_tools_value">145</string>
+    <!-- Sale Button Text -->
+    <string name="sale_text">Sale</string>
+</resources>
