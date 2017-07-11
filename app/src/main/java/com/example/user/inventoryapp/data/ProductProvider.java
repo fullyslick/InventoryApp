@@ -7,9 +7,9 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
 import android.util.Log;
 
 /**
@@ -18,21 +18,24 @@ import android.util.Log;
 
 public class ProductProvider extends ContentProvider {
 
-    // Database helper that will provide us access to the database
-    private ProductDbHelper mDbHelper;
-
-    /** URI matcher code for the content URI for the products table */
+    /**
+     * Tag for the log messages
+     */
+    public static final String LOG_TAG = ProductProvider.class.getSimpleName();
+    /**
+     * URI matcher code for the content URI for the products table
+     */
     private static final int PRODUCTS = 100;
 
-    /** URI matcher code for the content URI for a single product in the products table */
+    /**
+     * URI matcher code for the content URI for a single product in the products table
+     */
     private static final int PRODUCT_ID = 101;
-
-    /** Tag for the log messages */
-    public static final String LOG_TAG = ProductProvider.class.getSimpleName();
-
-    /** UriMatcher object to match a content URI to a corresponding code.
-     *  The input passed into the constructor represents the code to return for the root URI.
-     *  It's common to use NO_MATCH as the input for this case. */
+    /**
+     * UriMatcher object to match a content URI to a corresponding code.
+     * The input passed into the constructor represents the code to return for the root URI.
+     * It's common to use NO_MATCH as the input for this case.
+     */
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     // Static initializer. This is run the first time anything is called from this class.
@@ -44,8 +47,11 @@ public class ProductProvider extends ContentProvider {
         sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS, PRODUCTS);
 
         // Code for a single product selected
-        sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS +"/#", PRODUCT_ID);
+        sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS + "/#", PRODUCT_ID);
     }
+
+    // Database helper that will provide us access to the database
+    private ProductDbHelper mDbHelper;
 
     /**
      * Initialize the provider and the database helper object.
@@ -66,7 +72,7 @@ public class ProductProvider extends ContentProvider {
         SQLiteDatabase database = mDbHelper.getReadableDatabase();
 
         // This cursor will hold the result of the query
-        Cursor cursor ;
+        Cursor cursor;
 
         // Figure out if the URI matcher can match the URI to a specific code
         int match = sUriMatcher.match(uri);
@@ -78,11 +84,12 @@ public class ProductProvider extends ContentProvider {
                 cursor = database.query(ProductEntry.TABLE_NAME, projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
+
             // If the passed Uri matches the PRODUCT_ID int, then query only a single row from the database
             case PRODUCT_ID:
                 // Extract out the ID of the requested row from the URI
                 selection = ProductEntry._ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
 
                 // Perform the query on the table where the _id equals _ID extracted from the passed Uri
                 // return the cursor object containing the data
@@ -94,6 +101,9 @@ public class ProductProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
+
+        // This method helps me determine when query is performed by showing the uri inserted in logcat
+        Log.i(LOG_TAG, "Querying the database. The uri passed for querying is:" + uri);
 
         // Set notification URI on the Cursor,
         // so we know what content URI the Cursor was created for.
@@ -119,17 +129,19 @@ public class ProductProvider extends ContentProvider {
     }
 
     // Helper method that inserts data into the database and returns the Uri for the inserted row
-    private Uri insertProduct(Uri uri, ContentValues values){
-        // Check that the product name is not null
+    private Uri insertProduct(Uri uri, ContentValues values) {
+        // Check that the product name is not null. I think that extraction data from the input may result in
+        // inserting an "empty" string, which is different from null.
+        // That is why I also check for an "empty" string: length() == 0
         String productName = values.getAsString(ProductEntry.COLUMN_PRODUCT_NAME);
-        if (productName == null) {
-            throw new IllegalArgumentException("Product requires a product name!");
+        if (productName == null || productName.length() == 0) {
+            throw new IllegalArgumentException("Insert Exception! Product requires a product name!");
         }
 
-        // Check that the price is not null and not a negative number
+        // Check that the price is not null or not a negative number
         Float price = values.getAsFloat(ProductEntry.COLUMN_PRODUCT_PRICE);
-        if (price == null && price < 0) {
-            throw new IllegalArgumentException("Product requires a price!");
+        if (price == null || price < 0) {
+            throw new IllegalArgumentException("Insert Exception! Product requires a price or a positive value!");
         }
 
         // No need to check other inputs because they have default values, and "suppliers e-mail" can have no value
@@ -150,23 +162,160 @@ public class ProductProvider extends ContentProvider {
         getContext().getContentResolver().notifyChange(uri, null);
 
         // Once we know the ID of the new row in the table,
-        // return the new URI with the ID appended to the end of it
-        return ContentUris.withAppendedId(uri, id);
+        // assign to new Uri variable, the new URI with the ID appended to the end of it
+        Uri returnedUri = ContentUris.withAppendedId(uri, id);
+
+        // This method helps me determine when insert is performed by showing in the logcat,
+        // the number of rows inserted and the new uri
+        Log.i(LOG_TAG, "Inserting into the database! The number of rows inserted is " + id +
+                        " and the new uri is: " + returnedUri);
+
+        return returnedUri ;
     }
 
     @Override
-    public int delete(@NonNull Uri uri, @Nullable String s, @Nullable String[] strings) {
-        return 0;
+    public int update(Uri uri, ContentValues contentValues, String selection,
+                      String[] selectionArgs) {
+
+        // Figure out if the URI matcher can match the URI to a specific code
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PRODUCTS:
+                // If it matches the int for the whole database, do not modify selection & selectionArgs
+                // and call helper method updateProduct()
+                return updateProduct(uri, contentValues, selection, selectionArgs);
+            case PRODUCT_ID:
+                // It it matches the int for a single row, provide a selection & selectionArgs
+                // Extract out the ID of the requested row from the URI
+                selection = ProductEntry._ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+
+                // Now call helper method updateProduct()
+                return updateProduct(uri, contentValues, selection, selectionArgs);
+            default:
+                // If the Uri do not match the int templates throw an exception
+                throw new IllegalArgumentException("Update is not supported for " + uri);
+        }
     }
 
-    @Override
-    public int update(@NonNull Uri uri, @Nullable ContentValues contentValues, @Nullable String s, @Nullable String[] strings) {
-        return 0;
+    // Helper method that sends command to the database to perform an update
+    // Returns the number of rows that have been updated
+    private int updateProduct(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+
+        // Check if product_name column key is present,
+        // and that its value is not null. I think that extraction data from the input may result in
+        // inserting an empty string, which is different from null.
+        // That is why I also check for an "empty" string: length() == 0
+        if (values.containsKey(ProductEntry.COLUMN_PRODUCT_NAME)) {
+            String productName = values.getAsString(ProductEntry.COLUMN_PRODUCT_NAME);
+            if (productName == null || productName.length() == 0) {
+                // If there is no product name, do not try to update database
+                return 0;
+            }
+        }
+
+        if (values.containsKey(ProductEntry.COLUMN_PRODUCT_PRICE)) {
+            // Check that the price is not null or not a negative number
+            Float price = values.getAsFloat(ProductEntry.COLUMN_PRODUCT_PRICE);
+            if (price == null || price < 0) {
+                // If there is no price for the product or it is a negative value, do not try to update database
+                return 0;
+            }
+        }
+
+        // No need to check other inputs because they have default values, and "suppliers e-mail" can have no value
+
+        // If there are no values to update, then don't try to update the database
+        if (values.size() == 0) {
+            return 0;
+        }
+
+        // Otherwise, get writable database to update the data
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
+
+        // Perform the update on the database and get the number of rows affected
+        int rowsUpdated = database.update(ProductEntry.TABLE_NAME, values, selection, selectionArgs);
+
+        // If 1 or more rows were updated, then notify all listeners that the data at the
+        // given URI has changed
+        if (rowsUpdated != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        // This method helps me determine when update is performed by showing in the logcat,
+        // the number of rows updated
+        Log.i(LOG_TAG, "Updating the database! The number of rows updated is: " + rowsUpdated );
+
+        // Return the number of rows updated
+        return rowsUpdated;
     }
 
-    @Nullable
+    // Delete the data at the given selection and selection arguments.
     @Override
-    public String getType(@NonNull Uri uri) {
-        return null;
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        // Get writable database
+        SQLiteDatabase database = mDbHelper.getWritableDatabase();
+
+        // Track the number of rows that were deleted
+        int rowsDeleted;
+
+        // Figure out if the URI matcher can match the URI to a specific code
+        final int match = sUriMatcher.match(uri);
+
+        switch (match) {
+            case PRODUCTS:
+                // If it matches the int for the whole database, do not modify selection & selectionArgs
+                // Execute an SQLite command to delete the whole database rows
+                rowsDeleted = database.delete(ProductEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+
+            case PRODUCT_ID:
+                // If it matches the int for a single row or rows,
+                // modify selection & selectionArgs to get the id of the row
+                // Extract out the ID of the requested row from the URI
+                selection = ProductEntry._ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+
+                // Execute an SQLite command to delete the selected row from database
+                rowsDeleted = database.delete(ProductEntry.TABLE_NAME, selection, selectionArgs);
+                break;
+
+            // If the pass Uri do not match any of the int values, throw an exception
+            default:
+                throw new IllegalArgumentException("Deletion is not supported for " + uri);
+        }
+
+        // If 1 or more rows were deleted, then notify all listeners that the data at the
+        // given URI has changed
+        if (rowsDeleted != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+
+        // This method helps me determine when delete is performed by showing in the logcat,
+        // the number of rows deleted
+        Log.i(LOG_TAG, "Deleting from database! The number of rows deleted is: " + rowsDeleted );
+
+        // Return the number of rows deleted
+        return rowsDeleted;
+    }
+
+    /**
+     * The purpose of this method is to return a String,
+     * that describes the type of the data stored at the input Uri.
+     * Returns the MIME type of data for the content URI.
+     */
+    @Override
+    public String getType(Uri uri) {
+        // Figure out if the URI matcher can match the URI to a specific code
+        final int match = sUriMatcher.match(uri);
+
+        switch (match) {
+            case PRODUCTS:
+                return ProductEntry.CONTENT_LIST_TYPE;
+            case PRODUCT_ID:
+                return ProductEntry.CONTENT_ITEM_TYPE;
+            default:
+                throw new IllegalStateException("Unknown URI " + uri + " with match " + match);
+        }
     }
 }
