@@ -5,7 +5,7 @@
     <!-- Product Name tools:text -->
     <string name="product_name_tools">Product Name</string>
     <!-- Quantity Text of a product -->
-    <string name="quantity_text">Quantity:&#032;&#032;</string>
+    <string name="quantity_text">Quantity:&#032;</string>
     <!-- Quantity of Product tools:text-->
     <string name="quantity_tools_value">8</string>
     <!-- Price Text -->

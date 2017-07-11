@@ -7,9 +7,10 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
+import android.view.View;
+import android.widget.ListView;
 
-import com.example.user.inventoryapp.data.ProductContract;
+import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,6 +23,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Find the ListView which will be populated with the product data
+        ListView productListView = (ListView) findViewById(R.id.list);
+
+        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        View emptyView = findViewById(R.id.empty_view);
+        productListView.setEmptyView(emptyView);
+
+
     }
 
     @Override
@@ -43,7 +53,6 @@ public class MainActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // Respond to a click on the "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
-                 // TO:DO INSERT METHOD HERE
                 // Call helper method insertDummyData
                 insertDummyData();
 

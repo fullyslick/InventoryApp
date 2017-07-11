@@ -8,6 +8,7 @@
 
     <ImageView
         android:id="@+id/list_item_photo"
+        tools:src="@drawable/ic_add_a_photo_white_36dp"
         style="@style/ListItemPhotoStyling" />
 
     <LinearLayout style="@style/ListItemTextHolderStyling">
