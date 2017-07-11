@@ -167,8 +167,9 @@ public class ProductProvider extends ContentProvider {
 
         // This method helps me determine when insert is performed by showing in the logcat,
         // the number of rows inserted and the new uri
-        Log.i(LOG_TAG, "Inserting into the database! The number of rows inserted is " + id +
-                        " and the new uri is: " + returnedUri);
+        // and the values passed
+        Log.i(LOG_TAG, "Inserting into the database! The number of rows inserted is " + id + "\n" +
+                        " and the new uri is: " + "\n" + returnedUri + "\n" + " values:" + values);
 
         return returnedUri ;
     }
