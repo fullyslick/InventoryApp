@@ -113,7 +113,7 @@ public class ProductCursorAdapter extends CursorAdapter {
         String productImageString = cursor.getString(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PHOTO_URI));
 
         // Check if productImageString is equal to the default value, set a drawable resource
-        if (productImageString == "no image") {
+        if (productImageString.equals("no image") ) {
             mPhotoImageView.setImageResource(R.drawable.ic_add_a_photo_white_36dp);
         }
         // if it's not default value then convert the productImageString into uri and

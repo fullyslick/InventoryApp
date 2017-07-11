@@ -1,6 +1,10 @@
 package com.example.user.inventoryapp;
 
+import android.app.LoaderManager;
 import android.content.ContentValues;
+import android.content.CursorLoader;
+import android.content.Loader;
+import android.database.Cursor;
 import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,15 +13,22 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     /**
      * Tag for the log messages
      */
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
+
+    // Constants that holds the ID of the product Loader
+    private static final int PRODUCT_LOADER = 1 ;
+
+    // Member variable to store the ProductCursorAdapter object
+    ProductCursorAdapter mCursorAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,7 +42,14 @@ public class MainActivity extends AppCompatActivity {
         View emptyView = findViewById(R.id.empty_view);
         productListView.setEmptyView(emptyView);
 
+        // Setup empty cursor adapter to create a list view from each row from DB ( cursor )
+        mCursorAdapter = new ProductCursorAdapter(this, null);
 
+        // Attach cursor adapter to the ListView
+        productListView.setAdapter(mCursorAdapter);
+
+        // Prepare the loader.  Either re-connect with an existing one, or start a new one.
+        getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
     }
 
     @Override
@@ -61,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
                 // TO:DO howDeleteConfirmationDialog(); HERE
+                deleteAllProducts();
 
                 return true;
         }
@@ -85,5 +104,62 @@ public class MainActivity extends AppCompatActivity {
 
         // Check if the dummy data is inserted by showing a message in the logcat
         Log.i(LOG_TAG, "Inserted dummy data from MainActivity. The new row Uri is: " + newUri);
+    }
+
+    // This method deletes all products from the database
+    private void deleteAllProducts(){
+        // This variable stores the number of rows deleted
+        int mRowsDeleted = 0;
+
+        // Now delete all rows from the database
+        mRowsDeleted = getContentResolver().delete(
+                ProductEntry.CONTENT_URI,  // Select all database
+                null,                      // No additional arguments because we delete all of the rows
+                null
+        );
+
+        // Check if all the rows were deleted and inform the user
+        if( mRowsDeleted != 0) {
+            //  Show message to inform the user that all products were deleted
+            Toast.makeText(this, getString(R.string.all_products_deleted), Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, getString(R.string.failed_deleting_all_products), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    // Create the cursor loader
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        // The columns that should be delivered by the content resolver
+        String[] projection = {
+                ProductEntry._ID,
+                ProductEntry.COLUMN_PRODUCT_NAME,
+                ProductEntry.COLUMN_PRODUCT_QUANTITY,
+                ProductEntry.COLUMN_PRODUCT_PRICE,
+                ProductEntry.COLUMN_PRODUCT_PHOTO_URI };
+
+        return new CursorLoader(this,     // Parent activity context (Main Activity)
+                ProductEntry.CONTENT_URI, // Provider content uri to query
+                projection,               // Columns to include in the resulting Cursor
+                null,                     // No selection clause
+                null,                     // No selection argument
+                null);                    // Default sort order
+    }
+
+    // Querying asynchronously the database has finished
+    // Get the loader object and the data from the cursor
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        // ProductCursorAdapter with the new data from the database delivered in cursor object
+        mCursorAdapter.swapCursor(data);
+    }
+
+    // This is called when the last Cursor provided to onLoadFinished()
+    // above is about to be closed.  We need to make sure we are no
+    // longer using it.
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        // Pass empty values for the adapter
+        mCursorAdapter.swapCursor(null);
     }
 }

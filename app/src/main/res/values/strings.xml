@@ -18,4 +18,8 @@
     <string name="action_insert_dummy_data">Insert dummy data</string>
     <!-- Label for overflow menu option that deletes all product data in the app [CHAR LIMIT=20] -->
     <string name="action_delete_all_entries">Delete All Products</string>
+    <!-- All products deleted message -->
+    <string name="all_products_deleted">All products was successfully deleted!</string>
+    <!-- Failed to delete all products message -->
+    <string name="failed_deleting_all_products">Failed to delete all products!</string>
 </resources>
