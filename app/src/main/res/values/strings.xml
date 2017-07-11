@@ -22,4 +22,10 @@
     <string name="all_products_deleted">All products was successfully deleted!</string>
     <!-- Failed to delete all products message -->
     <string name="failed_deleting_all_products">Failed to delete all products!</string>
+    <!-- Delete all product Dialog message -->
+    <string name="delete_all_product_dialog_message">Do you want to delete all products?</string>
+    <!-- Delete button title -->
+    <string name="delete">Delete</string>
+    <!-- Cancel button title -->
+    <string name="cancel">Cancel</string>
 </resources>

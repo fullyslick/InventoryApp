@@ -1,8 +1,10 @@
 package com.example.user.inventoryapp;
 
+import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
 import android.content.CursorLoader;
+import android.content.DialogInterface;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
@@ -77,9 +79,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 return true;
 
             // Respond to a click on the "Delete all entries" menu option
+            // If user clicked on "Delete All Products" option then show a confirmation dialog
             case R.id.action_delete_all_entries:
-                // TO:DO howDeleteConfirmationDialog(); HERE
-                deleteAllProducts();
+
+                showDeleteConfirmationDialog();
 
                 return true;
         }
@@ -105,6 +108,38 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // Check if the dummy data is inserted by showing a message in the logcat
         Log.i(LOG_TAG, "Inserted dummy data from MainActivity. The new row Uri is: " + newUri);
     }
+
+    // This method displays a confirmation dialog to prompt the user, if he wants to proceed with deleting
+    private void showDeleteConfirmationDialog(){
+        // Create new AlertDialog object
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // Set a message for the dialog
+        builder.setMessage(R.string.delete_all_product_dialog_message);
+
+        // Set title for the positive button ("Delete") and attach a listener
+        // Call deleteAllProducts() on click of this button
+        builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                deleteAllProducts();
+            }
+        });
+
+        // Set title for the negative button ("Cancel") and attach a listener
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User clicked the "Cancel" button, so dismiss the dialog
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
 
     // This method deletes all products from the database
     private void deleteAllProducts(){
