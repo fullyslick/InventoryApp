@@ -30,6 +30,7 @@
             <TextView
                 android:id="@+id/quantity"
                 style="@style/ProductDetailsStyling"
+                android:layout_marginLeft="@dimen/small_padding"
                 tools:text="@string/quantity_tools_value" />
 
         </LinearLayout>

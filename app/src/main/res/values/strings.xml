@@ -5,7 +5,7 @@
     <!-- Product Name tools:text -->
     <string name="product_name_tools">Product Name</string>
     <!-- Quantity Text of a product -->
-    <string name="quantity_text">Quantity:&#032;</string>
+    <string name="quantity_text">Quantity:</string>
     <!-- Quantity of Product tools:text-->
     <string name="quantity_tools_value">8</string>
     <!-- Price Text -->
@@ -28,4 +28,6 @@
     <string name="delete">Delete</string>
     <!-- Cancel button title -->
     <string name="cancel">Cancel</string>
+    <!-- Out of stock message for product that has 0 quantity on "Sale" click-->
+    <string name="out_of_stock">This product is out of stock!</string>
 </resources>
