@@ -50,4 +50,10 @@
 
     <!-- Label for detail (editor) menu option to save product and leave editor [CHAR LIMIT=20] -->
     <string name="action_save">Save</string>
+
+    <!-- Label for detail activity when new product is inserting  -->
+    <string name="detail_activity_title_new_product">New Product</string>
+
+    <!-- Label for detail activity when existing product is updating  -->
+    <string name="detail_activity_title_edit_product">Edit Product</string>
 </resources>

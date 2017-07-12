@@ -2,6 +2,7 @@ package com.example.user.inventoryapp;
 
 import android.app.AlertDialog;
 import android.app.LoaderManager;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
@@ -16,6 +17,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -23,9 +25,7 @@ import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    /**
-     * Tag for the log messages
-     */
+    // Tag for the log messages
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     // Constants that holds the ID of the product Loader
@@ -62,6 +62,30 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         // Attach cursor adapter to the ListView
         productListView.setAdapter(mCursorAdapter);
+
+        // Set a listener on a ListItem (product) click
+        productListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+
+                // Create new intent to go to {@link DetailActivity}
+                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+
+                // Form the content URI that represents the specific product that was clicked on,
+                // by appending the "id" (passed as input to this method) onto the
+                // {@link ProductEntry#CONTENT_URI}.
+                // If the id passed for a particular ListItem (product) is 5
+                // The currentProductUri would be : content://com.example.user.inventoryapp/products/5
+                Uri currentProductUri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, id);
+
+                // Set the URI on the data field of the intent
+                intent.setData(currentProductUri);
+
+                // Launch the {@link DetailActivity} to display the data for the current pet.
+                startActivity(intent);
+            }
+        });
+
 
         // Prepare the loader.  Either re-connect with an existing one, or start a new one.
         getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
