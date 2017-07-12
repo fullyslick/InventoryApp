@@ -2,32 +2,52 @@
     <string name="app_name">InventoryApp</string>
     <!-- Message with instructions on how to populate the database-->
     <string name="empty_view_message">To insert a product into the database, please tap the plus button.</string>
+
     <!-- Product Name tools:text -->
     <string name="product_name_tools">Product Name</string>
+
     <!-- Quantity Text of a product -->
     <string name="quantity_text">Quantity:</string>
+
     <!-- Quantity of Product tools:text-->
     <string name="quantity_tools_value">8</string>
+
     <!-- Price Text -->
     <string name="price_text">Price:  €&#032;</string>
+
     <!-- Price of Product tools:text-->
     <string name="price_tools_value">145</string>
+
     <!-- Sale Button Text -->
     <string name="sale_text">Sale</string>
-    <!-- Label for overflow menu option that inserts fake pet data into the app [CHAR LIMIT=20] -->
+
+    <!-- Label for detail overflow menu option that deletes the current product [CHAR LIMIT=20] -->
+    <string name="action_delete">Delete</string>
+
+    <!-- Label for overflow menu option that inserts fake product data into the app [CHAR LIMIT=20] -->
     <string name="action_insert_dummy_data">Insert dummy data</string>
+
     <!-- Label for overflow menu option that deletes all product data in the app [CHAR LIMIT=20] -->
     <string name="action_delete_all_entries">Delete All Products</string>
+
     <!-- All products deleted message -->
     <string name="all_products_deleted">All products was successfully deleted!</string>
+
     <!-- Failed to delete all products message -->
     <string name="failed_deleting_all_products">Failed to delete all products!</string>
+
     <!-- Delete all product Dialog message -->
     <string name="delete_all_product_dialog_message">Do you want to delete all products?</string>
+
     <!-- Delete button title -->
     <string name="delete">Delete</string>
+
     <!-- Cancel button title -->
     <string name="cancel">Cancel</string>
+
     <!-- Out of stock message for product that has 0 quantity on "Sale" click-->
     <string name="out_of_stock">This product is out of stock!</string>
+
+    <!-- Label for detail (editor) menu option to save product and leave editor [CHAR LIMIT=20] -->
+    <string name="action_save">Save</string>
 </resources>
