@@ -2,20 +2,46 @@
 <resources>
     <!-- Margin around the floating action button in CatalogActivity -->
     <dimen name="fab_margin">16dp</dimen>
+
     <!-- Standard Margin -->
     <dimen name="standard_margin">16dp</dimen>
+
     <!-- Standard Padding -->
     <dimen name="standard_padding">8dp</dimen>
+
     <!-- Small Padding -->
     <dimen name="small_padding">4dp</dimen>
+
     <!-- Empty View Text Size -->
     <dimen name="empty_view_text_size">18sp</dimen>
+
     <!-- Preview photo dimensions -->
     <dimen name="preview_photo_dimen">72dp</dimen>
+
     <!-- Product Details Text Size -->
     <dimen name="product_details_text_size">16sp</dimen>
+
     <!-- Sale button width-->
     <dimen name="sale_width">48dp</dimen>
+
     <!-- Sale text size -->
     <dimen name="sale_text_size">12sp</dimen>
+
+    <!-- Photo of product dimensions (square) in Detail Activity-->
+    <dimen name="detail_photo_dimen">160dp</dimen>
+
+    <!-- The height of the separator view (border) -->
+    <dimen name="separator_height">1dp</dimen>
+
+    <!-- Labels text size -->
+    <dimen name="labels_text_size">18sp</dimen>
+
+    <!-- EditTexts text size -->
+    <dimen name="edit_texts_size">16sp</dimen>
+
+    <!-- Available Quantity label size -->
+    <dimen name="available_quantity_size">18sp</dimen>
+
+    <!-- Increase / Decrease buttons dimensions -->
+    <dimen name="increase_decrease_btn_dimen">42dp</dimen>
 </resources>

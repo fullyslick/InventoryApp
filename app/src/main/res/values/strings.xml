@@ -13,10 +13,13 @@
     <string name="quantity_tools_value">8</string>
 
     <!-- Price Text -->
-    <string name="price_text">Price:  €&#032;</string>
+    <string name="price_text">Price:&#032;</string>
 
     <!-- Price of Product tools:text-->
     <string name="price_tools_value">145</string>
+
+    <!-- Local Currency [CHAR LIMIT=3] Now it is euro-->
+    <string name="local_currency">€</string>
 
     <!-- Sale Button Text -->
     <string name="sale_text">Sale</string>
@@ -56,4 +59,43 @@
 
     <!-- Label for detail activity when existing product is updating  -->
     <string name="detail_activity_title_edit_product">Edit Product</string>
+
+    <!-- Label for Product Name [CHAR LIMIT=15]-->
+    <string name="product_name_label">Product Name :</string>
+
+    <!-- Hint in the EditText for product name -->
+    <string name="enter_product_name_hint">Enter Product Name</string>
+
+    <!-- Label for Price [CHAR LIMIT=10]-->
+    <string name="price_label">Price :</string>
+
+    <!-- Hint in the EditText for price [CHAR LIMIT=20]-->
+    <string name="enter_product_price_hint">Enter Price</string>
+
+    <!-- Label for Available Quantity [CHAR LIMIT=20]-->
+    <string name="available_quantity">Available Quantity</string>
+
+    <!-- Label for Restock Options -->
+    <string name="restock_options">Restock Options</string>
+
+    <!-- Label for supplier's name -->
+    <string name="suppliers_name_label">Supplier :</string>
+
+    <!-- Hint for edit suppliers name -->
+    <string name="suppliers_name_hint">Enter Supplier</string>
+
+    <!-- Label for supplier's email -->
+    <string name="suppliers_email_label">Supplier\'s E-mail :</string>
+
+    <!-- Hint for edit suppliers e-mail -->
+    <string name="suppliers_email_hint">Enter e-mail</string>
+
+    <!-- Label for restock Quantity -->
+    <string name="restock_quantity_label">Restock Quantity :</string>
+
+    <!-- Hint for edit suppliers e-mail -->
+    <string name="restock_quantity_hint">0</string>
+
+    <!-- Title for Restock Button -->
+    <string name="restock_button_title">Order Now</string>
 </resources>
