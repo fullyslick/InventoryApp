@@ -47,6 +47,10 @@ public class ProductContract {
         public static final String COLUMN_SUPPLIER_NAME = "supplier_name";
         public static final String COLUMN_SUPPLIER_EMAIL = "supplier_email";
 
+        // I do not have a column for the "Restock Quantity" because I assume
+        // that the user will want a different restock quantity every time,
+        // so no need to save any value into the database for that.
+
         // The MIME type of the {@link #CONTENT_URI} for a list of products.
         public static final String CONTENT_LIST_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_PRODUCTS;

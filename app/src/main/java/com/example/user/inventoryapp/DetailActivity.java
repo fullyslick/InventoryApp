@@ -1,8 +1,12 @@
 package com.example.user.inventoryapp;
 
 import android.app.AlertDialog;
+import android.app.LoaderManager;
+import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.Loader;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
@@ -15,7 +19,9 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
+import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
+
+import com.example.user.inventoryapp.data.ProductContract;
 
 /**
  * Created by Alexander Rashkov on 12.07.17.
@@ -23,7 +29,10 @@ import android.widget.Toast;
 
 //  Allows user to insert a new product or edit an existing one.
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+
+    // The id of the loader
+    private static final int EXISTING_PRODUCT_LOADER = 2;
 
     // Tag for the log messages
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -100,6 +109,7 @@ public class DetailActivity extends AppCompatActivity {
             // TO:DO
             // Prepare the loader.  Either re-connect with an existing one,
             // or start a new one.
+            getLoaderManager().initLoader(EXISTING_PRODUCT_LOADER, null, this);
         }
 
         // Find all relevant views that we will need to read user input from
@@ -269,5 +279,84 @@ public class DetailActivity extends AppCompatActivity {
         // Create the alert dialog and display it
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
+    }
+
+    // Create the loader
+    // Set projection, the fields from the database we want to visualize on the UI
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        // Detail Activity will display all product's attributes except "Restock quantity"
+        // which I have not even included into the database.
+        // See ProductContract comments for more info.
+        String[] projection = {
+                ProductEntry._ID,
+                ProductEntry.COLUMN_PRODUCT_NAME,
+                ProductEntry.COLUMN_PRODUCT_QUANTITY,
+                ProductEntry.COLUMN_PRODUCT_PRICE,
+                ProductEntry.COLUMN_PRODUCT_PHOTO_URI,
+                ProductEntry.COLUMN_SUPPLIER_NAME,
+                ProductEntry.COLUMN_SUPPLIER_EMAIL};
+
+        // This loader will execute the ContentProvider's query method on a background thread
+        return new CursorLoader(this,   // Parent activity context
+                mCurrentProductUri,     // Query the content URI for the current product;
+                projection,             // Columns to include in the resulting Cursor;
+                null,                   // No selection clause
+                null,                   // No selection arguments
+                null);                  // Default sort order
+    }
+
+    // Loader has finished its job on a background
+    // Extract the data and visualize it on the UI
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+
+        // Proceed with moving to the first row of the cursor and reading data from it
+        // (This should be the only row in the cursor)
+        if (cursor.moveToFirst()) {
+
+            // Find the column index of the attributes we are interested in displaying
+            int productNameColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME);
+            int productQuantityColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_QUANTITY);
+            int productPriceColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PRICE);
+            int productPhotoUriColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PHOTO_URI);
+            int supplierColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_SUPPLIER_NAME);
+            int supplierEmailColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_SUPPLIER_EMAIL);
+
+            // Extract out the value from the Cursor for the given column index
+            String productName = cursor.getString(productNameColumnIndex);
+            int productQuantity = cursor.getInt(productQuantityColumnIndex);
+            float productPrice = cursor.getFloat(productPriceColumnIndex);
+            String productPhotoUri = cursor.getString(productPhotoUriColumnIndex);
+            String supplierName = cursor.getString(supplierColumnIndex);
+            String supplierEmail = cursor.getString(supplierEmailColumnIndex);
+
+            // Check in the logcat the data from the cursor
+            Log.i(LOG_TAG, "The data from the cursor loader in Detail Activity. Product Name: " + productName +
+                           " Quantity: " + productQuantity +
+                           " Price: " +   productPrice +
+                           " Photo Uri: " + productPhotoUri +
+                           " Supplier: " + supplierName +
+                           " Supplier's Email: " + supplierEmail);
+
+            // TO:DO Update the views on the screen
+        }
+    }
+
+    // This is called when the last Cursor provided to onLoadFinished()
+    // above is about to be closed.  We need to make sure we are no
+    // longer using it.
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+
+        // Set empty values to the field
+        mProductNameText.setText("");
+        mProductQuantityText.setText("");
+        mProductPriceText.setText("");
+        mSupplierNameText.setText("");
+        mSupplierEmailText.setText("");
+
+        // Set default drawable for the photo of the product
+        mProductPhotoView.setImageResource(R.drawable.ic_add_a_photo_white_36dp);
     }
 }
