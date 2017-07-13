@@ -1,5 +1,6 @@
 package com.example.user.inventoryapp;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.CursorLoader;
@@ -7,7 +8,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
@@ -23,7 +27,9 @@ import android.widget.Toast;
 
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
-import com.example.user.inventoryapp.data.ProductContract;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Created by Alexander Rashkov on 12.07.17.
@@ -33,14 +39,17 @@ import com.example.user.inventoryapp.data.ProductContract;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    // The id of the loader
-    private static final int EXISTING_PRODUCT_LOADER = 2;
-
     // Tag for the log messages
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
-
+    // The id of the loader
+    private static final int EXISTING_PRODUCT_LOADER = 2;
+    // Request code intent that gets the image from the users' gallery
+    private static final int PICK_IMAGE_REQUEST = 0;
     // Content URI for the existing product (null if it's a new product)
     private Uri mCurrentProductUri;
+
+    // Uri that will be converted to bitmap and then displayed
+    private Uri mProductPhotoUri;
 
     // Boolean flag that keeps track of whether the product has been edited (true) or not (false)
     private boolean mProductHasChanged = false;
@@ -95,7 +104,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         // If the intent DOES NOT contain a any URI ( null ), then we know that we are
         // creating a new product, because ony clicking on ListItem (product) passes any uri
-        if( mCurrentProductUri == null){
+        if (mCurrentProductUri == null) {
             // This is a new product, so change the app bar to say "Add a Product"
             setTitle(getString(R.string.detail_activity_title_new_product));
 
@@ -140,16 +149,116 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             public void onClick(View view) {
                 mProductHasChanged = true;
 
-                //TO:DO Start an intent to the user's gallery
+                // Call helper method to open user's gallery
+                openImageSelector();
             }
         });
 
     }
 
+    // Helper method that access the user gallery
+    private void openImageSelector() {
+
+        // Create intent object
+        Intent intent;
+
+        // For older devices call ACTION_GET_CONTENT
+        // which asks the user to to choose a single app from which to pick a file
+        if (Build.VERSION.SDK_INT < 19) {
+            intent = new Intent(Intent.ACTION_GET_CONTENT);
+        }
+
+        // For newer devices call ACTION_OPEN_DOCUMENT which displays system-controlled picker UI controlled,
+        // that allows the user to browse all files that other apps have made available.
+        // CATEGORY_OPENABLE - show only results that can be "opened".
+        else {
+            intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+        }
+
+        // The type of files we are looking for is images
+        intent.setType("image/*");
+        startActivityForResult(Intent.createChooser(intent, getString(R.string.select_photo)), PICK_IMAGE_REQUEST);
+    }
+
+    // Called after the user selects a document in the picker called from openImageSelector()
+    // The resultData parameter contains the URI that points to the selected document.
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+        // The ACTION_OPEN_DOCUMENT intent was sent with the request code PICK_IMAGE_REQUEST.
+        // If the request code seen here doesn't match, it's the response to some other intent,
+        // and the below code shouldn't run at all.
+
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK) {
+
+            // The document selected by the user won't be returned in the intent.
+            // Instead, a URI to that document will be contained in the return intent
+            // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
+            if (resultData != null) {
+                mProductPhotoUri = resultData.getData();
+                Log.i(LOG_TAG, "The Photo Uri picked from the gallery is " + mProductPhotoUri.toString());
+
+                // Call helper method getBitmapFromUri to convert the uri to bitmap object
+                // and then assign the bitmap object to the mProductPhotoView
+                mProductPhotoView.setImageBitmap(getBitmapFromUri(mProductPhotoUri));
+            }
+        }
+    }
+
+    // Helper method that converts the photo Uri to bitmap object
+    private Bitmap getBitmapFromUri(Uri uri) {
+        if (uri == null || uri.toString().isEmpty())
+            return null;
+
+        // Get the dimensions of the View
+        int targetW = mProductPhotoView.getWidth();
+        int targetH = mProductPhotoView.getHeight();
+
+        InputStream input = null;
+        try {
+            input = this.getContentResolver().openInputStream(uri);
+
+            // Get the dimensions of the bitmap
+            BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+            bmOptions.inJustDecodeBounds = true;
+            BitmapFactory.decodeStream(input, null, bmOptions);
+            input.close();
+
+            int photoW = bmOptions.outWidth;
+            int photoH = bmOptions.outHeight;
+
+            // Determine how much to scale down the image
+            int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+
+            // Decode the image file into a Bitmap sized to fill the View
+            bmOptions.inJustDecodeBounds = false;
+            bmOptions.inSampleSize = scaleFactor;
+            bmOptions.inPurgeable = true;
+
+            input = this.getContentResolver().openInputStream(uri);
+            Bitmap bitmap = BitmapFactory.decodeStream(input, null, bmOptions);
+            input.close();
+            return bitmap;
+
+        } catch (FileNotFoundException fne) {
+            Log.e(LOG_TAG, "Failed to load image.", fne);
+            return null;
+        } catch (Exception e) {
+            Log.e(LOG_TAG, "Failed to load image.", e);
+            return null;
+        } finally {
+            try {
+                input.close();
+            } catch (IOException ioe) {
+
+            }
+        }
+    }
+
     // Called from InvalidateOptionsMenu
     // This method removes the "Delete" option when new product is inserting
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu){
+    public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         // Should work only for new product insertion, because we do not want to have
         // a "delete" option on a product that do not even exist yet
@@ -184,7 +293,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 //Exit Activity
                 finish();
 
-                return  true;
+                return true;
 
             // On click of "Delete" option
             case R.id.action_delete:
@@ -343,7 +452,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // Check if we are visualizing a dummy product,
             // this means that it will have no photo,
             // so the productPhotoUri should be equal to default value "no image"
-            if (productPhotoUri.equals("no image")){
+            if (productPhotoUri.equals("no image")) {
 
                 // If it there is no image due to dummy data,
                 // then set default drawable for the photo of the product
