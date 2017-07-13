@@ -3,6 +3,8 @@ package com.example.user.inventoryapp;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
+import android.content.ContentValues;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -15,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,10 +29,13 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
+import com.example.user.inventoryapp.data.ProductProvider;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+
+import static java.security.AccessController.getContext;
 
 /**
  * Created by Alexander Rashkov on 12.07.17.
@@ -39,8 +45,12 @@ import java.io.InputStream;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    // Gets the context of this activity
+    private static Context context;
+
     // Tag for the log messages
-    public static final String LOG_TAG = MainActivity.class.getSimpleName();
+    public static final String LOG_TAG = DetailActivity.class.getSimpleName();
+
     // The id of the loader
     private static final int EXISTING_PRODUCT_LOADER = 2;
     // Request code intent that gets the image from the users' gallery
@@ -53,6 +63,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     // Boolean flag that keeps track of whether the product has been edited (true) or not (false)
     private boolean mProductHasChanged = false;
+
+    // Defines a variable to contain the number of updated rows
+    int mRowsUpdated = 0;
 
     // EditText field to enter product's name
     private EditText mProductNameText;
@@ -214,6 +227,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         int targetW = mProductPhotoView.getWidth();
         int targetH = mProductPhotoView.getHeight();
 
+        // TO:DO FIX
+        if(targetH == 0) targetH = 1;
+        if(targetW == 0) targetW = 1;
+
         InputStream input = null;
         try {
             input = this.getContentResolver().openInputStream(uri);
@@ -287,8 +304,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         switch (item.getItemId()) {
             case R.id.action_save:
 
-                // Call the saveProduct() method, in which check editText fields and insert or update db
-                // TO:DO
+                // Call the saveProduct() method, which checks editText fields and the ImageView, and insert or update db
+                saveProduct();
 
                 //Exit Activity
                 finish();
@@ -308,7 +325,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 // Check for changes - mProductHasChange for false return to MainActivity, for true show Dialog
                 // Not changes was made, ( mProductHasChanged is still false ) so return to MainActivity
                 if (!mProductHasChanged) {
-                    NavUtils.navigateUpFromSameTask(DetailActivity.this);
+
+                    // TO:DO Comment
+                    onBackPressed();
                     return true;
                 }
 
@@ -319,8 +338,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
 
-                                // This listener will bring the user back to MainActivity
-                                NavUtils.navigateUpFromSameTask(DetailActivity.this);
+
+                                // TO:DO Comment
+                                finish();
                             }
                         };
 
@@ -329,6 +349,80 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    // Get users' input and save it into the database
+    private void saveProduct() {
+        // Get the input from the EditText
+        String productNameString = mProductNameText.getText().toString().trim();
+        String productQuantityString = mProductQuantityText.getText().toString().trim();
+        String productPriceString = mProductPriceText.getText().toString().trim();
+        String supplierNameString = mSupplierNameText.getText().toString().trim();
+        String supplierEmailString = mSupplierEmailText.getText().toString().trim();
+
+        // Check if this is supposed to be a new product
+        // and check if all the fields in the Detail Activity are blankCheck if fields are empty.
+        if ( mCurrentProductUri == null &&
+                TextUtils.isEmpty(productNameString) && TextUtils.isEmpty(productQuantityString) &&
+                TextUtils.isEmpty(productPriceString) && TextUtils.isEmpty(supplierNameString) &&
+                TextUtils.isEmpty(supplierEmailString) && mProductPhotoUri == null ){
+
+            // Since no fields were modified and no photo is inserted,
+            // we can return early without creating a new product.
+            // No need to create ContentValues and no need to do any ContentProvider operations.
+            return;
+        }
+
+          // Convert the Strings of product's quantity and price into a appropriate data type for the database
+          int productQuantityInt = Integer.parseInt(productQuantityString);
+          float productPriceFloat = Float.parseFloat(productPriceString);
+
+          // Convert the photo uri to string, because DB accepts string not uri
+          String productPhotoString = mProductPhotoUri.toString();
+
+        // TO:DO Should check all fields for empty strings or default values or null for product image Photo (ImagesView)
+        // TO:DO And show Toast Messages for every input the is not filed after every toast message there should be return, so if there is an empty filed the saveProduct() is escaped and npt saving int othe database
+        // TO:DO Quantity and Price should not be a negative value - make toast message for that too
+
+        // Create a new map of values, where column names are the keys
+        ContentValues values = new ContentValues();
+        values.put(ProductEntry.COLUMN_PRODUCT_NAME, productNameString);
+        values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, productQuantityInt);
+        values.put(ProductEntry.COLUMN_PRODUCT_PRICE, productPriceFloat);
+        values.put(ProductEntry.COLUMN_PRODUCT_PHOTO_URI, productPhotoString);
+        values.put(ProductEntry.COLUMN_SUPPLIER_NAME, supplierNameString);
+        values.put(ProductEntry.COLUMN_SUPPLIER_EMAIL, supplierEmailString);
+
+        // Check if we are creating new product or updating an existing one
+        // Check the uri passed from MainActivity,
+        // if it is null then we are inserting new product
+        if (mCurrentProductUri == null ){
+
+            // Insert the new row, returning the primary key value of the new row
+            Uri returnedUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
+
+            // Show a toast message depending on whether or not the insertion was successful
+            if (returnedUri == null) {
+                Toast.makeText(this, getString(R.string.save_product_failed), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, getString(R.string.save_product_successful), Toast.LENGTH_SHORT).show();
+            }
+
+            // Show in the log cat the key of the new inserted row
+            Log.i(LOG_TAG, "The new inserted row key is: " + returnedUri);
+
+        } else {
+
+            // Update the existing product
+            mRowsUpdated = getContentResolver().update(mCurrentProductUri, values, null, null);
+
+            // Show a toast message depending on whether or not the update was successful
+            if (mRowsUpdated == 0) {
+                Toast.makeText(this, getString(R.string.update_product_failed), Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, getString(R.string.update_product_successful), Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     // This method is called when the physical back button is pressed.
@@ -442,6 +536,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             String supplierName = cursor.getString(supplierColumnIndex);
             String supplierEmail = cursor.getString(supplierEmailColumnIndex);
 
+            // Get the string value of the photo uri from the database
+            // convert it to uri and assign it to the member variable
+            mProductPhotoUri = Uri.parse(productPhotoUri);
+
             // Update the fields on the screen with the data from the cursor
             mProductNameText.setText(productName);
             mProductQuantityText.setText(Integer.toString(productQuantity));
@@ -459,8 +557,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 mProductPhotoView.setImageResource(R.drawable.add_photo_placeholder);
             } else {
 
-                //TO:DO Replace with mProductPhotoView.setImageBitmap(getBitmapFromUri( Uri от cursora -> "photo_uri" дръпнато oт cursor.getColumnIndex));
-                Toast.makeText(this, "Something is worng DEFAULT photo uri was not recognised", Toast.LENGTH_SHORT).show();
+                // Call helper method getBitmapFromUri to convert the uri to bitmap object
+                // The argument should be uri that is why productPhotoUri is converted from string to uri
+                // When bitmap object is returned, set it as image on the mProductPhotoView
+                mProductPhotoView.setImageBitmap(getBitmapFromUri(mProductPhotoUri));
             }
 
         }

@@ -3,6 +3,7 @@ package com.example.user.inventoryapp.data;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -11,6 +12,8 @@ import android.net.Uri;
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
 import android.util.Log;
+
+import static java.security.AccessController.getContext;
 
 /**
  * Created by Alexander Rashkov on 10.07.17.
@@ -318,5 +321,10 @@ public class ProductProvider extends ContentProvider {
             default:
                 throw new IllegalStateException("Unknown URI " + uri + " with match " + match);
         }
+    }
+
+    public void notifyChange( Context context, Uri uri ){
+        Log.i(LOG_TAG, "Notify chnage is called");
+        getContext().getContentResolver().notifyChange(uri, null);
     }
 }

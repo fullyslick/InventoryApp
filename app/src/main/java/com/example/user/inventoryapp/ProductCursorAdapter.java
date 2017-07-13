@@ -177,9 +177,15 @@ public class ProductCursorAdapter extends CursorAdapter {
         if (uri == null || uri.toString().isEmpty())
             return null;
 
+        Log.i(LOG_TAG, "Passed product image uri in the adpater into getBitmapFromUri is:" + uri );
+
         // Get the dimensions of the View
         int targetW = mPhotoImageView.getWidth();
         int targetH = mPhotoImageView.getHeight();
+
+        // TO:DO FIX
+        if(targetH == 0) targetH = 1;
+        if(targetW == 0) targetW = 1;
 
         InputStream input = null;
         try {
@@ -208,7 +214,7 @@ public class ProductCursorAdapter extends CursorAdapter {
             return bitmap;
 
         } catch (FileNotFoundException fne) {
-            Log.e(LOG_TAG, "Failed to load image.", fne);
+            Log.e(LOG_TAG, "Failed to load image. File not found", fne);
             return null;
         } catch (Exception e) {
             Log.e(LOG_TAG, "Failed to load image.", e);

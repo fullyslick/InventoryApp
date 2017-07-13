@@ -110,4 +110,16 @@
 
     <!-- Message displayed on gallery browsing intent -->
     <string name="select_photo">Select Photo</string>
+
+    <!-- Message when saving a new product fails -->
+    <string name="save_product_failed">Product saving failed!</string>
+
+    <!-- Message when saving a new product is successful  -->
+    <string name="save_product_successful">Product saved!</string>+
+
+    <!-- Message when updating a product fails -->
+    <string name="update_product_failed">Product update failed!</string>
+
+    <!-- Message when updating a product is successful  -->
+    <string name="update_product_successful">Product updated!</string>
 </resources>
