@@ -1,12 +1,21 @@
 package com.example.user.inventoryapp;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 /**
  * Created by Alexander Rashkov on 12.07.17.
@@ -21,6 +30,42 @@ public class DetailActivity extends AppCompatActivity {
 
     // Content URI for the existing product (null if it's a new product)
     private Uri mCurrentProductUri;
+
+    // Boolean flag that keeps track of whether the product has been edited (true) or not (false)
+    private boolean mProductHasChanged = false;
+
+    // EditText field to enter product's name
+    private EditText mProductNameText;
+
+    // EditText field to enter product's price
+    private EditText mProductPriceText;
+
+    // EditText field to enter product's quantity
+    private EditText mProductQuantityText;
+
+    // ImageView that holds the image of the product
+    private ImageView mProductPhotoView;
+
+    // EditText field to enter supplier for the product
+    private EditText mSupplierNameText;
+
+    // EditText field to enter supplier for the product
+    private EditText mSupplierEmailText;
+
+    // Button that increases product's quantity
+    private Button mIncreaseQuantityButton;
+
+    // Button that decreases product's quantity
+    private Button mDecreaseQuantityButton;
+
+    // OnTouchListener to register when user is modifying and input
+    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            mProductHasChanged = true;
+            return false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +101,37 @@ public class DetailActivity extends AppCompatActivity {
             // Prepare the loader.  Either re-connect with an existing one,
             // or start a new one.
         }
+
+        // Find all relevant views that we will need to read user input from
+        mProductNameText = (EditText) findViewById(R.id.edit_product_name);
+        mProductPriceText = (EditText) findViewById(R.id.edit_product_price);
+        mProductQuantityText = (EditText) findViewById(R.id.edit_product_quantity);
+        mProductPhotoView = (ImageView) findViewById(R.id.edit_product_photo);
+        mSupplierNameText = (EditText) findViewById(R.id.edit_suppliers_name);
+        mSupplierEmailText = (EditText) findViewById(R.id.edit_suppliers_email);
+        mIncreaseQuantityButton = (Button) findViewById(R.id.increase_button);
+        mDecreaseQuantityButton = (Button) findViewById(R.id.decrease_button);
+
+        // Attach onTouchListener to these views
+        mProductNameText.setOnTouchListener(mTouchListener);
+        mProductPriceText.setOnTouchListener(mTouchListener);
+        mProductQuantityText.setOnTouchListener(mTouchListener);
+        mSupplierNameText.setOnTouchListener(mTouchListener);
+        mSupplierEmailText.setOnTouchListener(mTouchListener);
+        mIncreaseQuantityButton.setOnTouchListener(mTouchListener);
+        mDecreaseQuantityButton.setOnTouchListener(mTouchListener);
+
+        // The onTouchListener for the ImageView that holds the products photo
+        // should also perform an intent to the user gallery
+        mProductPhotoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                mProductHasChanged = true;
+
+                //TO:DO Start an intent to the user's gallery
+            }
+        });
+
     }
 
     // Called from InvalidateOptionsMenu
@@ -92,6 +168,10 @@ public class DetailActivity extends AppCompatActivity {
 
                 // Call the saveProduct() method, in which check editText fields and insert or update db
                 // TO:DO
+
+                //Exit Activity
+                finish();
+
                 return  true;
 
             // On click of "Delete" option
@@ -104,11 +184,90 @@ public class DetailActivity extends AppCompatActivity {
 
             case android.R.id.home:
 
-                // Check for changes -  mProductHasChange for false return to MainActivity, for true show Dialog
-                // TO:DO
+                // Check for changes - mProductHasChange for false return to MainActivity, for true show Dialog
+                // Not changes was made, ( mProductHasChanged is still false ) so return to MainActivity
+                if (!mProductHasChanged) {
+                    NavUtils.navigateUpFromSameTask(DetailActivity.this);
+                    return true;
+                }
 
+                // Create an on click listener for Dialog that will display,
+                // when the user has edited any filed ( mProductHasChanged become true )
+                DialogInterface.OnClickListener discardButtonClickListener =
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+
+                                // This listener will bring the user back to MainActivity
+                                NavUtils.navigateUpFromSameTask(DetailActivity.this);
+                            }
+                        };
+
+                // Now show this Dialog to prompt the user
+                showUnsavedChangesDialog(discardButtonClickListener);
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    // This method is called when the physical back button is pressed.
+    @Override
+    public void onBackPressed() {
+
+        // If no change was made to the product ( mProductHasChange is still false)
+        // just return to previous activity
+        if (!mProductHasChanged) {
+            super.onBackPressed();
+            return;
+        }
+
+
+        // But if mProductHasChanged is true ( registered by mTouchListener ),
+        // then create a listener for the discard option of the dialog that will be displayed
+        DialogInterface.OnClickListener discardButtonClickListener =
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                        // User has clicked on discard
+                        // so dismiss the dialog and close the cursor object
+                        finish();
+                    }
+                };
+
+        // Show dialog to inform the user that there are unsaved changes
+        showUnsavedChangesDialog(discardButtonClickListener);
+    }
+
+    // This dialog will be displayed when the user clicks on back button
+    // or uses the physical back button of the device
+    // It has as an argument, an already predefined on click listener on the discard option
+    private void showUnsavedChangesDialog(
+            DialogInterface.OnClickListener discardButtonClickListener) {
+
+        // Build the dialog
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // Set message for the dialog
+        builder.setMessage(R.string.unsaved_changes_dialog_msg);
+
+        // Set a title and behaviour on click of the positive button ("Discard")
+        builder.setPositiveButton(R.string.discard, discardButtonClickListener);
+
+        // Set a title and behaviour on click of the negative button ("Keep editing")
+        builder.setNegativeButton(R.string.keep_editing, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+
+                // The user has clicked "Keep Editing" so stay in the Detail activity
+                // just dismiss the dialog
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create the alert dialog and display it
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
     }
 }

@@ -6,7 +6,7 @@
     <LinearLayout style="@style/ProductDetailsHolderStyle">
 
         <ImageView
-            android:id="@+id/photo_of_product"
+            android:id="@+id/edit_product_photo"
             style="@style/PhotoOfProduct" />
 
         <View style="@style/SeparatorStyling" />
