@@ -19,6 +19,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Toast;
+
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
 import com.example.user.inventoryapp.data.ProductContract;
@@ -331,15 +333,27 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             String supplierName = cursor.getString(supplierColumnIndex);
             String supplierEmail = cursor.getString(supplierEmailColumnIndex);
 
-            // Check in the logcat the data from the cursor
-            Log.i(LOG_TAG, "The data from the cursor loader in Detail Activity. Product Name: " + productName +
-                           " Quantity: " + productQuantity +
-                           " Price: " +   productPrice +
-                           " Photo Uri: " + productPhotoUri +
-                           " Supplier: " + supplierName +
-                           " Supplier's Email: " + supplierEmail);
+            // Update the fields on the screen with the data from the cursor
+            mProductNameText.setText(productName);
+            mProductQuantityText.setText(Integer.toString(productQuantity));
+            mProductPriceText.setText(Float.toString(productPrice));
+            mSupplierNameText.setText(supplierName);
+            mSupplierEmailText.setText(supplierEmail);
 
-            // TO:DO Update the views on the screen
+            // Check if we are visualizing a dummy product,
+            // this means that it will have no photo,
+            // so the productPhotoUri should be equal to default value "no image"
+            if (productPhotoUri.equals("no image")){
+
+                // If it there is no image due to dummy data,
+                // then set default drawable for the photo of the product
+                mProductPhotoView.setImageResource(R.drawable.add_photo_placeholder);
+            } else {
+
+                //TO:DO Replace with mProductPhotoView.setImageBitmap(getBitmapFromUri( Uri от cursora -> "photo_uri" дръпнато oт cursor.getColumnIndex));
+                Toast.makeText(this, "Something is worng DEFAULT photo uri was not recognised", Toast.LENGTH_SHORT).show();
+            }
+
         }
     }
 
@@ -357,6 +371,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mSupplierEmailText.setText("");
 
         // Set default drawable for the photo of the product
-        mProductPhotoView.setImageResource(R.drawable.ic_add_a_photo_white_36dp);
+        mProductPhotoView.setImageResource(R.drawable.add_photo_placeholder);
     }
 }
