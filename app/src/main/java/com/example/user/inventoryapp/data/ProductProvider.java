@@ -322,9 +322,4 @@ public class ProductProvider extends ContentProvider {
                 throw new IllegalStateException("Unknown URI " + uri + " with match " + match);
         }
     }
-
-    public void notifyChange( Context context, Uri uri ){
-        Log.i(LOG_TAG, "Notify chnage is called");
-        getContext().getContentResolver().notifyChange(uri, null);
-    }
 }

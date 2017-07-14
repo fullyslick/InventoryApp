@@ -23,19 +23,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
-import com.example.user.inventoryapp.data.ProductProvider;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-
-import static java.security.AccessController.getContext;
 
 /**
  * Created by Alexander Rashkov on 12.07.17.
@@ -45,8 +43,7 @@ import static java.security.AccessController.getContext;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    // Gets the context of this activity
-    private static Context context;
+    private static final String STATE_URI = "STATE_URI";
 
     // Tag for the log messages
     public static final String LOG_TAG = DetailActivity.class.getSimpleName();
@@ -167,6 +164,40 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             }
         });
 
+    }
+
+    // This should handle screen orientation changes
+    // Now when screen is rotated the image of the product remains
+    // Because STATE_URI is put on onSaveInstanceState
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        if (mProductPhotoUri != null)
+            outState.putString(STATE_URI, mProductPhotoUri.toString());
+    }
+
+    // If there is STATE_URI ( nSaveInstanceState was called when screen was rotated )
+    // start viewTreeObserver to get the ImageView object first and then set it a bitmap
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        if (savedInstanceState.containsKey(STATE_URI) &&
+                !savedInstanceState.getString(STATE_URI).equals("")) {
+            mProductPhotoUri = Uri.parse(savedInstanceState.getString(STATE_URI));
+
+            ViewTreeObserver viewTreeObserver = mProductPhotoView.getViewTreeObserver();
+            viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                        mProductPhotoView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                    }
+                    mProductPhotoView.setImageBitmap(getBitmapFromUri(mProductPhotoUri));
+                }
+            });
+        }
     }
 
     // Helper method that access the user gallery

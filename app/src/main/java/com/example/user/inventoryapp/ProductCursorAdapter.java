@@ -5,8 +5,6 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,10 +18,6 @@ import android.widget.Toast;
 
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-
 /**
  * Created by Alexander Rashkov on 11.07.17.
  */
@@ -35,14 +29,15 @@ import java.io.InputStream;
  */
 public class ProductCursorAdapter extends CursorAdapter {
 
-    /**
-     * Tag for the log messages
-     */
+    // Tag for the log messages
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     // This ImageView object will hold the reference to the ImageView that holds
     // the photo of the product in the ListItem
     ImageView mPhotoImageView;
+
+    // This variable stores the uri of the product's photo
+    Uri mProductImageUri;
 
     /**
      * Constructs a new {@link ProductCursorAdapter}.
@@ -78,7 +73,7 @@ public class ProductCursorAdapter extends CursorAdapter {
      *                correct row.
      */
     @Override
-    public void bindView(View view, final Context context, Cursor cursor) {
+    public void bindView(final View view, final Context context, Cursor cursor) {
         // Get the id of the current ListItem
         final int id = cursor.getInt(cursor.getColumnIndex(ProductEntry._ID));
 
@@ -86,7 +81,7 @@ public class ProductCursorAdapter extends CursorAdapter {
         // Get the string value for the product name from the cursor object
         // Populate the productNameTextView
         TextView productNameTextView = (TextView) view.findViewById(R.id.product_name);
-        String productName = cursor.getString(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME));
+        final String productName = cursor.getString(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME));
         productNameTextView.setText(productName);
 
         // Find the TextView that will display product's quantity
@@ -110,24 +105,28 @@ public class ProductCursorAdapter extends CursorAdapter {
         // and later if it is different from default string, convert it to uri
         String productImageString = cursor.getString(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PHOTO_URI));
 
-        // Check if productImageString is equal to the default value, set a drawable resource
-        if (productImageString.equals("no image") ) {
-            mPhotoImageView.setImageResource(R.drawable.ic_add_a_photo_white_36dp);
-        }
-        // if it's not default value then convert the productImageString into uri and
-        // assign it to a member variable mPhotoUri
-        else {
-            Uri productImageUri = Uri.parse(productImageString);
+        Log.i(LOG_TAG, "The product String is:" + productImageString);
 
-            // call helper method getBitmapFromUri to extract a Bitmap from the image uri
-            mPhotoImageView.setImageBitmap(getBitmapFromUri(context, productImageUri));
+        // Check if productImageString is equal to the default value, set a drawable resource
+        // This should work only when dummy data is inserted
+        if (productImageString.equals("no image")) {
+
+            mPhotoImageView.setImageResource(R.drawable.ic_add_a_photo_white_36dp);
+
+        } else {
+
+            // Convert into Uri the string of the products photo uri
+            mProductImageUri = Uri.parse(productImageString);
+
+            // Visualize the photo using uri
+            mPhotoImageView.setImageURI(mProductImageUri);
         }
 
         // Get the sale button view
         Button saleButton = (Button) view.findViewById(R.id.sale_button);
 
         // Attach a listener to "Sale" button to perform an update on the database
-        saleButton.setOnClickListener(new View.OnClickListener(){
+        saleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // Create  ContentResolver object to update the database
@@ -138,7 +137,7 @@ public class ProductCursorAdapter extends CursorAdapter {
 
                 // If the quantity of the products is more than 0, then we can reduce ot by one
                 // We do not want any negative values
-                if( productQuantity > 0 ){
+                if (productQuantity > 0) {
 
                     // Create a new uri for this product ( ListItem)
                     Uri CurrentProductUri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, id);
@@ -162,67 +161,11 @@ public class ProductCursorAdapter extends CursorAdapter {
                     // Notify all listener to Update the UI
                     // Now the quantity of this product is reduced on the UI
                     context.getContentResolver().notifyChange(CurrentProductUri, null);
-                }
-               else{
+                } else {
                     // Show a message to the UI to inform the user for the 0 quantity of this product
                     Toast.makeText(v.getContext(), R.string.out_of_stock, Toast.LENGTH_SHORT).show();
                 }
             }
         });
-    }
-
-    // Helper method that will extract the bitmap from the provided uri
-    // Needs context to getContentResolver()
-    private Bitmap getBitmapFromUri(Context context, Uri uri) {
-        if (uri == null || uri.toString().isEmpty())
-            return null;
-
-        Log.i(LOG_TAG, "Passed product image uri in the adpater into getBitmapFromUri is:" + uri );
-
-        // Get the dimensions of the View
-        int targetW = mPhotoImageView.getWidth();
-        int targetH = mPhotoImageView.getHeight();
-
-        // TO:DO FIX
-        if(targetH == 0) targetH = 1;
-        if(targetW == 0) targetW = 1;
-
-        InputStream input = null;
-        try {
-            input = context.getContentResolver().openInputStream(uri);
-
-            // Get the dimensions of the bitmap
-            BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-            bmOptions.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(input, null, bmOptions);
-            input.close();
-
-            int photoW = bmOptions.outWidth;
-            int photoH = bmOptions.outHeight;
-
-            // Determine how much to scale down the image
-            int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
-
-            // Decode the image file into a Bitmap sized to fill the View
-            bmOptions.inJustDecodeBounds = false;
-            bmOptions.inSampleSize = scaleFactor;
-            bmOptions.inPurgeable = true;
-
-            input = context.getContentResolver().openInputStream(uri);
-            Bitmap bitmap = BitmapFactory.decodeStream(input, null, bmOptions);
-            input.close();
-            return bitmap;
-
-        } catch (FileNotFoundException fne) {
-            Log.e(LOG_TAG, "Failed to load image. File not found", fne);
-            return null;
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Failed to load image.", e);
-            return null;
-        } finally {
-            try {
-                input.close();
-            } catch (IOException ioe) {}
-        }
     }
 }
