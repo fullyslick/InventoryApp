@@ -122,4 +122,7 @@
 
     <!-- Message when updating a product is successful  -->
     <string name="update_product_successful">Product updated!</string>
+
+    <!-- Message for empty product -->
+    <string name="enter_product_name">Please enter product name!</string>
 </resources>

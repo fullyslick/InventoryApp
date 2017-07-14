@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -127,7 +128,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // Otherwise this is an existing product, so change app bar to say "Edit Product"
             setTitle(getString(R.string.detail_activity_title_edit_product));
 
-            // TO:DO
             // Prepare the loader.  Either re-connect with an existing one,
             // or start a new one.
             getLoaderManager().initLoader(EXISTING_PRODUCT_LOADER, null, this);
@@ -240,6 +240,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // provided to this method as a parameter.  Pull that uri using "resultData.getData()"
             if (resultData != null) {
                 mProductPhotoUri = resultData.getData();
+
                 Log.i(LOG_TAG, "The Photo Uri picked from the gallery is " + mProductPhotoUri.toString());
 
                 // Call helper method getBitmapFromUri to convert the uri to bitmap object
@@ -257,10 +258,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // Get the dimensions of the View
         int targetW = mProductPhotoView.getWidth();
         int targetH = mProductPhotoView.getHeight();
-
-        // TO:DO FIX
-        if(targetH == 0) targetH = 1;
-        if(targetW == 0) targetW = 1;
 
         InputStream input = null;
         try {
@@ -286,6 +283,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             input = this.getContentResolver().openInputStream(uri);
             Bitmap bitmap = BitmapFactory.decodeStream(input, null, bmOptions);
             input.close();
+
             return bitmap;
 
         } catch (FileNotFoundException fne) {
@@ -338,8 +336,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 // Call the saveProduct() method, which checks editText fields and the ImageView, and insert or update db
                 saveProduct();
 
-                //Exit Activity
-                finish();
+//                //Exit Activity
+//                finish();
 
                 return true;
 
@@ -356,9 +354,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 // Check for changes - mProductHasChange for false return to MainActivity, for true show Dialog
                 // Not changes was made, ( mProductHasChanged is still false ) so return to MainActivity
                 if (!mProductHasChanged) {
-
-                    // TO:DO Comment
-                    onBackPressed();
+                    NavUtils.navigateUpFromSameTask(DetailActivity.this);
                     return true;
                 }
 
@@ -369,9 +365,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
 
-
-                                // TO:DO Comment
-                                finish();
+                                // This listener will bring the user back to MainActivity
+                                NavUtils.navigateUpFromSameTask(DetailActivity.this);
                             }
                         };
 
@@ -401,6 +396,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // Since no fields were modified and no photo is inserted,
             // we can return early without creating a new product.
             // No need to create ContentValues and no need to do any ContentProvider operations.
+            // Close the activity and escape early
+
+            finish();
             return;
         }
 
@@ -414,6 +412,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // TO:DO Should check all fields for empty strings or default values or null for product image Photo (ImagesView)
         // TO:DO And show Toast Messages for every input the is not filed after every toast message there should be return, so if there is an empty filed the saveProduct() is escaped and npt saving int othe database
         // TO:DO Quantity and Price should not be a negative value - make toast message for that too
+        if ( productNameString.isEmpty()){
+            Toast.makeText( this, getString(R.string.enter_product_name), Toast.LENGTH_LONG).show();
+            return;
+        }
+
 
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
@@ -437,6 +440,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 Toast.makeText(this, getString(R.string.save_product_failed), Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, getString(R.string.save_product_successful), Toast.LENGTH_SHORT).show();
+
+                // The insert was successful so close this activity
+                finish();
             }
 
             // Show in the log cat the key of the new inserted row
@@ -452,6 +458,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 Toast.makeText(this, getString(R.string.update_product_failed), Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, getString(R.string.update_product_successful), Toast.LENGTH_SHORT).show();
+
+                // The update was successful so close this activity
+                finish();
             }
         }
     }
@@ -591,7 +600,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 // Call helper method getBitmapFromUri to convert the uri to bitmap object
                 // The argument should be uri that is why productPhotoUri is converted from string to uri
                 // When bitmap object is returned, set it as image on the mProductPhotoView
-                mProductPhotoView.setImageBitmap(getBitmapFromUri(mProductPhotoUri));
+                mProductPhotoView.setImageURI(mProductPhotoUri);
             }
 
         }
