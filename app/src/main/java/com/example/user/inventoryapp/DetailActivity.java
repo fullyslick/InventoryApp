@@ -33,6 +33,8 @@ import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Alexander Rashkov on 12.07.17.
@@ -76,22 +78,22 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private boolean mProductHasChanged = false;
 
     // EditText field to enter product's name
-    private EditText mProductNameText;
+    private EditText mProductNameEditText;
 
     // EditText field to enter product's price
-    private EditText mProductPriceText;
+    private EditText mProductPriceEditText;
 
     // EditText field to enter product's quantity
-    private EditText mProductQuantityText;
+    private EditText mProductQuantityEditText;
 
     // ImageView that holds the image of the product
     private ImageView mProductPhotoView;
 
     // EditText field to enter supplier for the product
-    private EditText mSupplierNameText;
+    private EditText mSupplierNameEditText;
 
     // EditText field to enter supplier for the product
-    private EditText mSupplierEmailText;
+    private EditText mSupplierEmailEditText;
 
     // Button that increases product's quantity
     private Button mIncreaseQuantityButton;
@@ -144,21 +146,21 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
 
         // Find all relevant views that we will need to read user's input from
-        mProductNameText = (EditText) findViewById(R.id.edit_product_name);
-        mProductPriceText = (EditText) findViewById(R.id.edit_product_price);
-        mProductQuantityText = (EditText) findViewById(R.id.edit_product_quantity);
+        mProductNameEditText = (EditText) findViewById(R.id.edit_product_name);
+        mProductPriceEditText = (EditText) findViewById(R.id.edit_product_price);
+        mProductQuantityEditText = (EditText) findViewById(R.id.edit_product_quantity);
         mProductPhotoView = (ImageView) findViewById(R.id.edit_product_photo);
-        mSupplierNameText = (EditText) findViewById(R.id.edit_suppliers_name);
-        mSupplierEmailText = (EditText) findViewById(R.id.edit_suppliers_email);
+        mSupplierNameEditText = (EditText) findViewById(R.id.edit_suppliers_name);
+        mSupplierEmailEditText = (EditText) findViewById(R.id.edit_suppliers_email);
         mIncreaseQuantityButton = (Button) findViewById(R.id.increase_button);
         mDecreaseQuantityButton = (Button) findViewById(R.id.decrease_button);
 
         // Attach onTouchListener to these views
-        mProductNameText.setOnTouchListener(mTouchListener);
-        mProductPriceText.setOnTouchListener(mTouchListener);
-        mProductQuantityText.setOnTouchListener(mTouchListener);
-        mSupplierNameText.setOnTouchListener(mTouchListener);
-        mSupplierEmailText.setOnTouchListener(mTouchListener);
+        mProductNameEditText.setOnTouchListener(mTouchListener);
+        mProductPriceEditText.setOnTouchListener(mTouchListener);
+        mProductQuantityEditText.setOnTouchListener(mTouchListener);
+        mSupplierNameEditText.setOnTouchListener(mTouchListener);
+        mSupplierEmailEditText.setOnTouchListener(mTouchListener);
         mIncreaseQuantityButton.setOnTouchListener(mTouchListener);
         mDecreaseQuantityButton.setOnTouchListener(mTouchListener);
 
@@ -169,7 +171,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
                 // Call the helper method increaseQuantityByOne
                 increaseQuantityByOne();
-                mProductHasChanged = true;
             }
         });
 
@@ -180,7 +181,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
                 // Call the helper method decreaseQuantityByOne
                 decreaseQuantityByOne();
-                mProductHasChanged = true;
             }
         });
 
@@ -195,6 +195,19 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 openImageSelector();
             }
         });
+
+        // Inflate the "Order Now" button
+        Button orderNowButton = (Button) findViewById(R.id.order_restock_button);
+
+        // Attach on click listener for the "Order Now" button
+        orderNowButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                // On click of "Order Now" button call helper method orderRestockProduct()
+                orderRestockProduct();
+            }
+        });
     }
 
     /**
@@ -203,7 +216,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private void increaseQuantityByOne() {
 
         // Get the string value of the EditText with the quantity of the product
-        String quantityFromInputString = mProductQuantityText.getText().toString();
+        String quantityFromInputString = mProductQuantityEditText.getText().toString();
 
         // Stores the int value of the quantity in the EditText
         int quantityFromInputInt;
@@ -220,7 +233,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         // Increase the int value of quantity by one, then convert it to string
         // and set it as text to the EditText view, containing the quantity of the product
-        mProductQuantityText.setText(String.valueOf(quantityFromInputInt + 1));
+        mProductQuantityEditText.setText(String.valueOf(quantityFromInputInt + 1));
     }
 
     /**
@@ -229,7 +242,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private void decreaseQuantityByOne() {
 
         // Get the string value of the EditText with the quantity of the product
-        String quantityFromInputString = mProductQuantityText.getText().toString();
+        String quantityFromInputString = mProductQuantityEditText.getText().toString();
 
         // Stores the int value of the quantity in the EditText
         int quantityFromInputInt;
@@ -251,9 +264,115 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
                 // Else, decrease the int value of quantity by one, then convert it to string
                 // and set it as text to the EditText view, containing the quantity of the product
-                mProductQuantityText.setText(String.valueOf(quantityFromInputInt - 1));
+                mProductQuantityEditText.setText(String.valueOf(quantityFromInputInt - 1));
             }
         }
+    }
+
+    /**
+     * Helper method that creates e-mail intent for restocking a product
+     **/
+    private void orderRestockProduct() {
+
+        // Escape early if we are inserting a new product.
+        // There is no sense to restock a product that we are just inserting.
+        if (mProductPhotoUri == null) {
+
+            // Inform the user that restocking a new product is not available
+            Toast.makeText(this, getString(R.string.restocking_new_product), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Inflate the restock quantity EditText view
+        EditText restockQuantityEditText = (EditText) findViewById(R.id.edit_restock_quantity);
+
+        // Get the input from the EditTexts
+        String productNameString = mProductNameEditText.getText().toString().trim();
+        String supplierNameString = mSupplierNameEditText.getText().toString().trim();
+        String supplierEmailString = mSupplierEmailEditText.getText().toString().trim();
+        String restockQuantityString = restockQuantityEditText.getText().toString().trim();
+
+        // Check for empty product name field
+        if (TextUtils.isEmpty(productNameString)) {
+
+            // Prompt the user to insert product's name
+            Toast.makeText(this, getString(R.string.enter_product_name), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check for empty supplier name field
+        if (TextUtils.isEmpty(supplierNameString)) {
+
+            // Prompt the user to insert supplier's name
+            Toast.makeText(this, getString(R.string.enter_supplier_name), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check for empty supplier e-mail field
+        if (TextUtils.isEmpty(supplierEmailString)) {
+
+            // Prompt the user to insert supplier's e-mail
+            Toast.makeText(this, getString(R.string.enter_supplier_email), Toast.LENGTH_SHORT).show();
+            return;
+
+        }
+        // Else, check if the inputted supplier e-mail is in valid format
+        else if (!isEmailValid(supplierEmailString)) {
+
+            // Inform the user that the inserted suppliers e-mail is not properly formated
+            Toast.makeText(this, getString(R.string.invalid_supplier_email), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Check for empty restock quantity field
+        if (TextUtils.isEmpty(restockQuantityString)) {
+            Toast.makeText(this, getString(R.string.enter_restock_quantity), Toast.LENGTH_LONG).show();
+            return;
+
+        } else {
+            // If the restock quantity field is not empty then convert its string value to int
+            int restockQuantityInt = Integer.parseInt(restockQuantityString);
+
+            // Check if the int value of product's restock quantity is negative value
+            if (restockQuantityInt <= 0) {
+
+                // If so escape early and prompt the user to insert a positive value
+                Toast.makeText(this, getString(R.string.enter_positive_restock_quantity), Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        // Create restock e-mail subject
+        String restockSubject = getString(R.string.ordering) + " " + productNameString;
+
+        // Create restock message to send as E-mail message
+        String restockMessage = getString(R.string.hello) + " " + supplierNameString + "\n" +
+                getString(R.string.i_would_like_to_order) + " " +
+                restockQuantityString + " " +
+                getString(R.string.restock_quantity_measurement_units) + " " +
+                productNameString;
+
+        // Create an e-mail intent to send an e-mail to the supplier
+        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+        emailIntent.setData(Uri.parse("mailto:" + supplierEmailString));
+        emailIntent.putExtra(Intent.EXTRA_SUBJECT, restockSubject);
+        emailIntent.putExtra(Intent.EXTRA_TEXT, restockMessage);
+
+        // Start the e-mail intent
+        startActivity(Intent.createChooser(emailIntent, "Send Email"));
+    }
+
+    /**
+     * Helper method that checks if the supplier's e-mail is properly formatted
+     *
+     * @param supplierEmailString the e-mail of the supplier
+     * @return true if the e-mail is the properly formatted
+     */
+    private boolean isEmailValid(String supplierEmailString) {
+        String expression = "^[\\w\\.-]+@([\\w\\-]+\\.)+[A-Z]{2,4}$";
+        Pattern pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(supplierEmailString);
+        return matcher.matches();
     }
 
     // This should handle screen orientation changes
@@ -486,11 +605,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private void saveProduct() {
 
         // Get the input from the EditText
-        String productNameString = mProductNameText.getText().toString().trim();
-        String productQuantityString = mProductQuantityText.getText().toString().trim();
-        String productPriceString = mProductPriceText.getText().toString().trim();
-        String supplierNameString = mSupplierNameText.getText().toString().trim();
-        String supplierEmailString = mSupplierEmailText.getText().toString().trim();
+        String productNameString = mProductNameEditText.getText().toString().trim();
+        String productQuantityString = mProductQuantityEditText.getText().toString().trim();
+        String productPriceString = mProductPriceEditText.getText().toString().trim();
+        String supplierNameString = mSupplierNameEditText.getText().toString().trim();
+        String supplierEmailString = mSupplierEmailEditText.getText().toString().trim();
 
         // Check if this is supposed to be a new product
         // and check if all the fields in the Detail Activity are empty
@@ -794,11 +913,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             mProductPhotoUri = Uri.parse(productPhotoUri);
 
             // Update the fields on the screen with the data from the cursor
-            mProductNameText.setText(productName);
-            mProductQuantityText.setText(Integer.toString(productQuantity));
-            mProductPriceText.setText(Float.toString(productPrice));
-            mSupplierNameText.setText(supplierName);
-            mSupplierEmailText.setText(supplierEmail);
+            mProductNameEditText.setText(productName);
+            mProductQuantityEditText.setText(Integer.toString(productQuantity));
+            mProductPriceEditText.setText(Float.toString(productPrice));
+            mSupplierNameEditText.setText(supplierName);
+            mSupplierEmailEditText.setText(supplierEmail);
 
             // Check if we are visualizing a dummy product,
             // this means that it will have no photo,
@@ -825,11 +944,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     public void onLoaderReset(Loader<Cursor> loader) {
 
         // Set empty values to the field
-        mProductNameText.setText("");
-        mProductQuantityText.setText("");
-        mProductPriceText.setText("");
-        mSupplierNameText.setText("");
-        mSupplierEmailText.setText("");
+        mProductNameEditText.setText("");
+        mProductQuantityEditText.setText("");
+        mProductPriceEditText.setText("");
+        mSupplierNameEditText.setText("");
+        mSupplierEmailEditText.setText("");
 
         // Set default drawable for the photo of the product
         mProductPhotoView.setImageResource(R.drawable.add_photo_placeholder);

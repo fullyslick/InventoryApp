@@ -147,6 +147,36 @@
     <!-- Toast message in detail view when current product was successfully deleted [CHAR LIMIT=NONE] -->
     <string name="detail_delete_product_successful">Product deleted</string>
 
-    <!-- Toast message in editor when current product has failed to be deleted [CHAR LIMIT=NONE] -->
+    <!-- Toast message in detail view when current product has failed to be deleted [CHAR LIMIT=NONE] -->
     <string name="detail_delete_product_failed">Error with deleting product</string>
+
+    <!-- Toast message when restocking a completely new product -->
+    <string name="restocking_new_product">You cannot restock a new product!</string>
+
+    <!-- Toast message for empty supplier name when restocking product -->
+    <string name="enter_supplier_name">Please enter supplier name</string>
+
+    <!-- Toast message for empty supplier e-mail when restocking product -->
+    <string name="enter_supplier_email">Please enter supplier\'s e-mail</string>
+
+    <!-- Toast message for invalid format of supplier's e-mail when restocking product -->
+    <string name="invalid_supplier_email">Supplier\'s e-mail is not a valid format! Please edit that field.</string>
+
+    <!-- Toast message for empty restock quantity -->
+    <string name="enter_restock_quantity">Please enter restock quantity</string>
+
+    <!-- Toast message for negative restock quantity -->
+    <string name="enter_positive_restock_quantity">Enter positive value for restock quantity</string>
+
+    <!-- Ordering -->
+    <string name="ordering">Ordering</string>
+    
+    <!-- Greeting to the supplier in the restock message -->
+    <string name="hello">Hello</string>
+    
+    <!-- "I would like to order" message in the restock message -->
+    <string name="i_would_like_to_order">I would like to order</string>
+
+    <!-- Units restock quantity is measured in -->
+    <string name="restock_quantity_measurement_units">pieces of</string>
 </resources>
