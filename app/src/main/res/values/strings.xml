@@ -125,4 +125,19 @@
 
     <!-- Message for empty product -->
     <string name="enter_product_name">Please enter product name!</string>
+
+    <!-- Message for empty price -->
+    <string name="enter_product_price">Please enter the price of the product!</string>
+
+    <!-- Message for negative price -->
+    <string name="enter_positive_product_price">Please enter a positive value for the price!</string>
+
+    <!-- Message for empty quantity -->
+    <string name="enter_product_quantity">Please enter the quantity of the product!</string>
+
+    <!-- Message for negative quantity -->
+    <string name="enter_positive_product_quantity">Please enter positive value for the product\'s quantity!</string>
+
+    <!-- Message for missing photo of the product -->
+    <string name="enter_product_photo">Please choose a photo for the product!</string>
 </resources>

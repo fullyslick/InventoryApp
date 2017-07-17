@@ -44,6 +44,7 @@ import java.io.InputStream;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
+    // Key for the saved state instance of product's photo Uri
     private static final String STATE_URI = "STATE_URI";
 
     // Tag for the log messages
@@ -51,13 +52,24 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     // The id of the loader
     private static final int EXISTING_PRODUCT_LOADER = 2;
+
     // Request code intent that gets the image from the users' gallery
     private static final int PICK_IMAGE_REQUEST = 0;
+
     // Content URI for the existing product (null if it's a new product)
     private Uri mCurrentProductUri;
 
-    // Uri that will be converted to bitmap and then displayed
-    private Uri mProductPhotoUri;
+    // Stores the Uri of the product's photo
+    private Uri mProductPhotoUri = null ;
+
+    // Stores the float value of product's price
+    float mProductPriceFloat;
+
+    // Stores the int value of product's quantity
+    int mProductQuantityInt;
+
+    // Stores the string value of the product's photo uri
+    String mProductPhotoString;
 
     // Boolean flag that keeps track of whether the product has been edited (true) or not (false)
     private boolean mProductHasChanged = false;
@@ -107,19 +119,19 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // in order to figure out if we're creating a new product or editing an existing one.
         Intent intent = getIntent();
 
-        // Apply the extracted uri to the member variable mCurrentProductUri
+        // Get the data from the intent and assign it to mCurrentProductUri
         mCurrentProductUri = intent.getData();
 
         // Show me in the logcat the uri extracted from the intent
         Log.i(LOG_TAG, "The passed uri from MainActivity is: " + mCurrentProductUri);
 
-        // If the intent DOES NOT contain a any URI ( null ), then we know that we are
-        // creating a new product, because ony clicking on ListItem (product) passes any uri
+        // If the intent DOES NOT contain any URI ( null ), then we know that we are
+        // creating a new product, because only clicking on ListItem (product) passes any (data) uri
         if (mCurrentProductUri == null) {
             // This is a new product, so change the app bar to say "Add a Product"
             setTitle(getString(R.string.detail_activity_title_new_product));
 
-            // And call invalidate option
+            // Call invalidate option
             // Now we will be able to modify the options menu (remove delete)
             // This happens in onPrepareOptionsMenu()
             invalidateOptionsMenu();
@@ -133,7 +145,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             getLoaderManager().initLoader(EXISTING_PRODUCT_LOADER, null, this);
         }
 
-        // Find all relevant views that we will need to read user input from
+        // Find all relevant views that we will need to read user's input from
         mProductNameText = (EditText) findViewById(R.id.edit_product_name);
         mProductPriceText = (EditText) findViewById(R.id.edit_product_price);
         mProductQuantityText = (EditText) findViewById(R.id.edit_product_quantity);
@@ -163,22 +175,22 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 openImageSelector();
             }
         });
-
     }
 
     // This should handle screen orientation changes
     // Now when screen is rotated the image of the product remains
-    // Because STATE_URI is put on onSaveInstanceState
+    // By saving the state of mProductPhotoUri and assign it to the key STATE_URI
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
+        // perform this only if there is already image selected from the gallery
         if (mProductPhotoUri != null)
             outState.putString(STATE_URI, mProductPhotoUri.toString());
     }
 
-    // If there is STATE_URI ( nSaveInstanceState was called when screen was rotated )
-    // start viewTreeObserver to get the ImageView object first and then set it a bitmap
+    // When activity is restarted on screen orientation change,
+    // check if the key STATE_URI for the saved instance of mProductPhotoUri.
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
@@ -187,6 +199,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 !savedInstanceState.getString(STATE_URI).equals("")) {
             mProductPhotoUri = Uri.parse(savedInstanceState.getString(STATE_URI));
 
+            // Then start viewTreeObserver to get the ImageView object first and then set it a bitmap
             ViewTreeObserver viewTreeObserver = mProductPhotoView.getViewTreeObserver();
             viewTreeObserver.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                 @Override
@@ -200,7 +213,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
     }
 
-    // Helper method that access the user gallery
+    // Helper method that access the user's gallery
     private void openImageSelector() {
 
         // Create intent object
@@ -229,10 +242,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     // The resultData parameter contains the URI that points to the selected document.
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent resultData) {
+
         // The ACTION_OPEN_DOCUMENT intent was sent with the request code PICK_IMAGE_REQUEST.
         // If the request code seen here doesn't match, it's the response to some other intent,
         // and the below code shouldn't run at all.
-
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK) {
 
             // The document selected by the user won't be returned in the intent.
@@ -241,7 +254,21 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             if (resultData != null) {
                 mProductPhotoUri = resultData.getData();
 
-                Log.i(LOG_TAG, "The Photo Uri picked from the gallery is " + mProductPhotoUri.toString());
+                // Let me check ih the logcat the uri that was picked from intent
+                Log.i(LOG_TAG, "The Uri of picked photo from the user's gallery is: " + mProductPhotoUri.toString());
+
+                // These lines solved the problem with user permission on restart of the emulator
+                // Now all the products' photos can be successfully displayed on device restart
+                int takeFlags = resultData.getFlags();
+                takeFlags &= (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        getContentResolver().takePersistableUriPermission(mProductPhotoUri, takeFlags);
+                    }
+                }
+                catch (SecurityException e){
+                    e.printStackTrace();
+                }
 
                 // Call helper method getBitmapFromUri to convert the uri to bitmap object
                 // and then assign the bitmap object to the mProductPhotoView
@@ -255,7 +282,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         if (uri == null || uri.toString().isEmpty())
             return null;
 
-        // Get the dimensions of the View
+        // Get the dimensions of the View where we will visualizer the photo
         int targetW = mProductPhotoView.getWidth();
         int targetH = mProductPhotoView.getHeight();
 
@@ -306,6 +333,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
+
         // Should work only for new product insertion, because we do not want to have
         // a "delete" option on a product that do not even exist yet
         super.onPrepareOptionsMenu(menu);
@@ -319,7 +347,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     // Inflate the menu from the xml file
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // This adds menu items to the app bar.
+
+        // This adds menu items ( menu options) to the app bar.
         getMenuInflater().inflate(R.menu.menu_detail_activity, menu);
         return true;
     }
@@ -333,11 +362,9 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         switch (item.getItemId()) {
             case R.id.action_save:
 
-                // Call the saveProduct() method, which checks editText fields and the ImageView, and insert or update db
+                // Call the saveProduct() method,
+                // which will insert a new product or update the databse
                 saveProduct();
-
-//                //Exit Activity
-//                finish();
 
                 return true;
 
@@ -379,6 +406,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
     // Get users' input and save it into the database
     private void saveProduct() {
+
         // Get the input from the EditText
         String productNameString = mProductNameText.getText().toString().trim();
         String productQuantityString = mProductQuantityText.getText().toString().trim();
@@ -387,7 +415,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         String supplierEmailString = mSupplierEmailText.getText().toString().trim();
 
         // Check if this is supposed to be a new product
-        // and check if all the fields in the Detail Activity are blankCheck if fields are empty.
+        // and check if all the fields in the Detail Activity are empty
         if ( mCurrentProductUri == null &&
                 TextUtils.isEmpty(productNameString) && TextUtils.isEmpty(productQuantityString) &&
                 TextUtils.isEmpty(productPriceString) && TextUtils.isEmpty(supplierNameString) &&
@@ -397,39 +425,78 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // we can return early without creating a new product.
             // No need to create ContentValues and no need to do any ContentProvider operations.
             // Close the activity and escape early
-
             finish();
+
             return;
         }
 
-          // Convert the Strings of product's quantity and price into a appropriate data type for the database
-          int productQuantityInt = Integer.parseInt(productQuantityString);
-          float productPriceFloat = Float.parseFloat(productPriceString);
-
-          // Convert the photo uri to string, because DB accepts string not uri
-          String productPhotoString = mProductPhotoUri.toString();
-
-        // TO:DO Should check all fields for empty strings or default values or null for product image Photo (ImagesView)
-        // TO:DO And show Toast Messages for every input the is not filed after every toast message there should be return, so if there is an empty filed the saveProduct() is escaped and npt saving int othe database
-        // TO:DO Quantity and Price should not be a negative value - make toast message for that too
-        if ( productNameString.isEmpty()){
+        // Check for empty product name field
+        if (TextUtils.isEmpty(productNameString)){
             Toast.makeText( this, getString(R.string.enter_product_name), Toast.LENGTH_LONG).show();
             return;
         }
 
+        // Check for empty price field
+        if (TextUtils.isEmpty(productPriceString)){
+            Toast.makeText( this, getString(R.string.enter_product_price), Toast.LENGTH_LONG).show();
+            return;
+
+        } else {
+            // If the price field is not empty then convert its string value to float
+            mProductPriceFloat = Float.parseFloat(productPriceString);
+
+            // Now check if the price is a negative number
+            if( mProductPriceFloat <= 0){
+
+                // Then escape early and prompt the user to insert a positive value
+                Toast.makeText( this, getString(R.string.enter_positive_product_price), Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        // Check for empty quantity field
+        if(TextUtils.isEmpty(productQuantityString)){
+            Toast.makeText( this, getString(R.string.enter_product_quantity), Toast.LENGTH_LONG).show();
+            return;
+
+        } else {
+            // If the quantity field is not empty then convert its string value to int
+            mProductQuantityInt = Integer.parseInt(productQuantityString);
+
+            // Check if the int value of product's quantity is negative value
+            if (mProductQuantityInt < 0){
+
+                // Then escape early and prompt the user to insert a positive value
+                Toast.makeText( this, getString(R.string.enter_positive_product_quantity), Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        // Convert the photo uri to string, because DB accepts strings not uris.
+        mProductPhotoString = mProductPhotoUri.toString();
+
+        // Check for empty image of the product
+        // Check for default drawable image of a dummy product
+        if (mProductPhotoUri == null ||  mProductPhotoString.equals("no image")){
+
+            // If there is no uri for the photo of the product, then the user have not selected one yet.
+            // So prompt the user to select a photo for the product.
+            Toast.makeText( this, getString(R.string.enter_product_photo), Toast.LENGTH_LONG).show();
+            return;
+
+        }
 
         // Create a new map of values, where column names are the keys
         ContentValues values = new ContentValues();
         values.put(ProductEntry.COLUMN_PRODUCT_NAME, productNameString);
-        values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, productQuantityInt);
-        values.put(ProductEntry.COLUMN_PRODUCT_PRICE, productPriceFloat);
-        values.put(ProductEntry.COLUMN_PRODUCT_PHOTO_URI, productPhotoString);
+        values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, mProductQuantityInt);
+        values.put(ProductEntry.COLUMN_PRODUCT_PRICE, mProductPriceFloat);
+        values.put(ProductEntry.COLUMN_PRODUCT_PHOTO_URI, mProductPhotoString);
         values.put(ProductEntry.COLUMN_SUPPLIER_NAME, supplierNameString);
         values.put(ProductEntry.COLUMN_SUPPLIER_EMAIL, supplierEmailString);
 
         // Check if we are creating new product or updating an existing one
-        // Check the uri passed from MainActivity,
-        // if it is null then we are inserting new product
+        // Look at the uri passed from MainActivity, if it is null then we are inserting new product
         if (mCurrentProductUri == null ){
 
             // Insert the new row, returning the primary key value of the new row
@@ -475,7 +542,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             super.onBackPressed();
             return;
         }
-
 
         // But if mProductHasChanged is true ( registered by mTouchListener ),
         // then create a listener for the discard option of the dialog that will be displayed
@@ -602,7 +668,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 // When bitmap object is returned, set it as image on the mProductPhotoView
                 mProductPhotoView.setImageURI(mProductPhotoUri);
             }
-
         }
     }
 
