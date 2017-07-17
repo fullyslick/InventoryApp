@@ -14,7 +14,8 @@
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_alignParentBottom">true</item>
         <item name="android:layout_alignParentRight">true</item>
-        <item name="android:layout_margin">@dimen/fab_margin</item>
+        <item name="android:layout_marginRight">@dimen/fab_margin_right</item>
+        <item name="android:layout_marginBottom">@dimen/fab_margin_bottom</item>
         <item name="android:src">@drawable/plus_24dp</item>
     </style>
 

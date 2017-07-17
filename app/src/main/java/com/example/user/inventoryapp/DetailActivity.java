@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,7 +17,6 @@ import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -44,23 +42,17 @@ import java.io.InputStream;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    // Key for the saved state instance of product's photo Uri
-    private static final String STATE_URI = "STATE_URI";
-
     // Tag for the log messages
     public static final String LOG_TAG = DetailActivity.class.getSimpleName();
+
+    // Key for the saved state instance of product's photo Uri
+    private static final String STATE_URI = "STATE_URI";
 
     // The id of the loader
     private static final int EXISTING_PRODUCT_LOADER = 2;
 
     // Request code intent that gets the image from the users' gallery
     private static final int PICK_IMAGE_REQUEST = 0;
-
-    // Content URI for the existing product (null if it's a new product)
-    private Uri mCurrentProductUri;
-
-    // Stores the Uri of the product's photo
-    private Uri mProductPhotoUri = null ;
 
     // Stores the float value of product's price
     float mProductPriceFloat;
@@ -71,11 +63,17 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     // Stores the string value of the product's photo uri
     String mProductPhotoString;
 
-    // Boolean flag that keeps track of whether the product has been edited (true) or not (false)
-    private boolean mProductHasChanged = false;
-
     // Defines a variable to contain the number of updated rows
     int mRowsUpdated = 0;
+
+    // Content URI for the existing product (null if it's a new product)
+    private Uri mCurrentProductUri;
+
+    // Stores the Uri of the product's photo
+    private Uri mProductPhotoUri;
+
+    // Boolean flag that keeps track of whether the product has been edited (true) or not (false)
+    private boolean mProductHasChanged = false;
 
     // EditText field to enter product's name
     private EditText mProductNameText;
@@ -164,6 +162,28 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mIncreaseQuantityButton.setOnTouchListener(mTouchListener);
         mDecreaseQuantityButton.setOnTouchListener(mTouchListener);
 
+        // On Click listener for the increase quantity button
+        mIncreaseQuantityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                // Call the helper method increaseQuantityByOne
+                increaseQuantityByOne();
+                mProductHasChanged = true;
+            }
+        });
+
+        // On Click listener for the decrease quantity button
+        mDecreaseQuantityButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                // Call the helper method decreaseQuantityByOne
+                decreaseQuantityByOne();
+                mProductHasChanged = true;
+            }
+        });
+
         // The onTouchListener for the ImageView that holds the products photo
         // should also perform an intent to the user gallery
         mProductPhotoView.setOnClickListener(new View.OnClickListener() {
@@ -177,6 +197,66 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         });
     }
 
+    /**
+     * Helper method that increases the quantity of the product by one
+     **/
+    private void increaseQuantityByOne() {
+
+        // Get the string value of the EditText with the quantity of the product
+        String quantityFromInputString = mProductQuantityText.getText().toString();
+
+        // Stores the int value of the quantity in the EditText
+        int quantityFromInputInt;
+
+        if (quantityFromInputString.isEmpty()) {
+
+            // if there is no quantity inserted the int value should be 0
+            quantityFromInputInt = 0;
+        } else {
+
+            // if there is quantity inserted, convert the string value from EditText to int
+            quantityFromInputInt = Integer.parseInt(quantityFromInputString);
+        }
+
+        // Increase the int value of quantity by one, then convert it to string
+        // and set it as text to the EditText view, containing the quantity of the product
+        mProductQuantityText.setText(String.valueOf(quantityFromInputInt + 1));
+    }
+
+    /**
+     * Helper method that decreases the quantity of the product by one
+     **/
+    private void decreaseQuantityByOne() {
+
+        // Get the string value of the EditText with the quantity of the product
+        String quantityFromInputString = mProductQuantityText.getText().toString();
+
+        // Stores the int value of the quantity in the EditText
+        int quantityFromInputInt;
+
+        if (quantityFromInputString.isEmpty()) {
+
+            // if there is no quantity inserted the int value should be 0
+            quantityFromInputInt = 0;
+        } else {
+
+            // if there is quantity inserted, convert the string value from EditText to int
+            quantityFromInputInt = Integer.parseInt(quantityFromInputString);
+
+            if(quantityFromInputInt == 0){
+
+                // If the quantity is 0 prompt the user to insert a positive value
+                Toast.makeText(this, getString(R.string.enter_positive_product_quantity), Toast.LENGTH_SHORT).show();
+            }
+            else{
+
+                // Else, decrease the int value of quantity by one, then convert it to string
+                // and set it as text to the EditText view, containing the quantity of the product
+                mProductQuantityText.setText(String.valueOf(quantityFromInputInt - 1));
+            }
+        }
+    }
+
     // This should handle screen orientation changes
     // Now when screen is rotated the image of the product remains
     // By saving the state of mProductPhotoUri and assign it to the key STATE_URI
@@ -184,7 +264,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        // perform this only if there is already image selected from the gallery
+        // Perform this only if there is already image selected from the gallery
         if (mProductPhotoUri != null)
             outState.putString(STATE_URI, mProductPhotoUri.toString());
     }
@@ -265,8 +345,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                         getContentResolver().takePersistableUriPermission(mProductPhotoUri, takeFlags);
                     }
-                }
-                catch (SecurityException e){
+                } catch (SecurityException e) {
                     e.printStackTrace();
                 }
 
@@ -416,10 +495,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         // Check if this is supposed to be a new product
         // and check if all the fields in the Detail Activity are empty
-        if ( mCurrentProductUri == null &&
+        if (mCurrentProductUri == null &&
                 TextUtils.isEmpty(productNameString) && TextUtils.isEmpty(productQuantityString) &&
                 TextUtils.isEmpty(productPriceString) && TextUtils.isEmpty(supplierNameString) &&
-                TextUtils.isEmpty(supplierEmailString) && mProductPhotoUri == null ){
+                TextUtils.isEmpty(supplierEmailString) && mProductPhotoUri == null) {
 
             // Since no fields were modified and no photo is inserted,
             // we can return early without creating a new product.
@@ -431,14 +510,14 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
 
         // Check for empty product name field
-        if (TextUtils.isEmpty(productNameString)){
-            Toast.makeText( this, getString(R.string.enter_product_name), Toast.LENGTH_LONG).show();
+        if (TextUtils.isEmpty(productNameString)) {
+            Toast.makeText(this, getString(R.string.enter_product_name), Toast.LENGTH_LONG).show();
             return;
         }
 
         // Check for empty price field
-        if (TextUtils.isEmpty(productPriceString)){
-            Toast.makeText( this, getString(R.string.enter_product_price), Toast.LENGTH_LONG).show();
+        if (TextUtils.isEmpty(productPriceString)) {
+            Toast.makeText(this, getString(R.string.enter_product_price), Toast.LENGTH_LONG).show();
             return;
 
         } else {
@@ -446,17 +525,17 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             mProductPriceFloat = Float.parseFloat(productPriceString);
 
             // Now check if the price is a negative number
-            if( mProductPriceFloat <= 0){
+            if (mProductPriceFloat <= 0) {
 
                 // Then escape early and prompt the user to insert a positive value
-                Toast.makeText( this, getString(R.string.enter_positive_product_price), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.enter_positive_product_price), Toast.LENGTH_LONG).show();
                 return;
             }
         }
 
         // Check for empty quantity field
-        if(TextUtils.isEmpty(productQuantityString)){
-            Toast.makeText( this, getString(R.string.enter_product_quantity), Toast.LENGTH_LONG).show();
+        if (TextUtils.isEmpty(productQuantityString)) {
+            Toast.makeText(this, getString(R.string.enter_product_quantity), Toast.LENGTH_LONG).show();
             return;
 
         } else {
@@ -464,10 +543,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             mProductQuantityInt = Integer.parseInt(productQuantityString);
 
             // Check if the int value of product's quantity is negative value
-            if (mProductQuantityInt < 0){
+            if (mProductQuantityInt < 0) {
 
                 // Then escape early and prompt the user to insert a positive value
-                Toast.makeText( this, getString(R.string.enter_positive_product_quantity), Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.enter_positive_product_quantity), Toast.LENGTH_LONG).show();
                 return;
             }
         }
@@ -477,11 +556,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         // Check for empty image of the product
         // Check for default drawable image of a dummy product
-        if (mProductPhotoUri == null ||  mProductPhotoString.equals("no image")){
+        if (mProductPhotoUri == null || mProductPhotoString.equals("no image")) {
 
             // If there is no uri for the photo of the product, then the user have not selected one yet.
             // So prompt the user to select a photo for the product.
-            Toast.makeText( this, getString(R.string.enter_product_photo), Toast.LENGTH_LONG).show();
+            Toast.makeText(this, getString(R.string.enter_product_photo), Toast.LENGTH_LONG).show();
             return;
 
         }
@@ -497,7 +576,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         // Check if we are creating new product or updating an existing one
         // Look at the uri passed from MainActivity, if it is null then we are inserting new product
-        if (mCurrentProductUri == null ){
+        if (mCurrentProductUri == null) {
 
             // Insert the new row, returning the primary key value of the new row
             Uri returnedUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
