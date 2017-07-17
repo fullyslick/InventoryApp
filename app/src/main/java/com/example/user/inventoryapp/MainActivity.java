@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     // Constants that holds the ID of the product Loader
-    private static final int PRODUCT_LOADER = 1 ;
+    private static final int PRODUCT_LOADER = 1;
 
     // Member variable to store the ProductCursorAdapter object
     ProductCursorAdapter mCursorAdapter;
@@ -39,11 +39,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Setup FAB to open EditorActivity
+        // Setup FAB to open DetailActivity
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
                 // Start an intent to DetailActivity on FAB click, to insert new product
                 Intent intent = new Intent(MainActivity.this, DetailActivity.class);
                 startActivity(intent);
@@ -81,11 +82,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 // Set the URI on the data field of the intent
                 intent.setData(currentProductUri);
 
-                // Launch the {@link DetailActivity} to display the data for the current pet.
+                // Launch the {@link DetailActivity} to display the data for the current product.
                 startActivity(intent);
             }
         });
-
 
         // Prepare the loader.  Either re-connect with an existing one, or start a new one.
         getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         ContentValues values = new ContentValues();
         values.put(ProductEntry.COLUMN_PRODUCT_NAME, "Dummy Product");
         values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, 10);
-        values.put(ProductEntry.COLUMN_PRODUCT_PRICE, 7.5 );
+        values.put(ProductEntry.COLUMN_PRODUCT_PRICE, 7.5);
         // I will use default value for photo uri,
         // and later in ProductProvider will check the string and for "no image" will give some drawable
         values.put(ProductEntry.COLUMN_PRODUCT_PHOTO_URI, "no image");
@@ -149,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     }
 
     // This method displays a confirmation dialog to prompt the user, if he wants to proceed with deleting
-    private void showDeleteConfirmationDialog(){
+    private void showDeleteConfirmationDialog() {
         // Create new AlertDialog object
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
@@ -179,9 +179,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         alertDialog.show();
     }
 
-
     // This method deletes all products from the database
-    private void deleteAllProducts(){
+    private void deleteAllProducts() {
         // This variable stores the number of rows deleted
         int mRowsDeleted = 0;
 
@@ -193,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         );
 
         // Check if all the rows were deleted and inform the user
-        if( mRowsDeleted != 0) {
+        if (mRowsDeleted != 0) {
             //  Show message to inform the user that all products were deleted
             Toast.makeText(this, getString(R.string.all_products_deleted), Toast.LENGTH_SHORT).show();
         } else {
@@ -210,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 ProductEntry.COLUMN_PRODUCT_NAME,
                 ProductEntry.COLUMN_PRODUCT_QUANTITY,
                 ProductEntry.COLUMN_PRODUCT_PRICE,
-                ProductEntry.COLUMN_PRODUCT_PHOTO_URI };
+                ProductEntry.COLUMN_PRODUCT_PHOTO_URI};
 
         return new CursorLoader(this,     // Parent activity context (Main Activity)
                 ProductEntry.CONTENT_URI, // Provider content uri to query

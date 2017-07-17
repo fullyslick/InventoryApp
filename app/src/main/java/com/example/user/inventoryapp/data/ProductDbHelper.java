@@ -3,13 +3,14 @@ package com.example.user.inventoryapp.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
 import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
 /**
  * Created by Alexander Rashkov on 10.07.17.
  */
 
-public class ProductDbHelper  extends SQLiteOpenHelper {
+public class ProductDbHelper extends SQLiteOpenHelper {
 
     // When changing the database schema, here the database version must be incremented.
     public static final int DATABASE_VERSION = 1;
@@ -29,7 +30,7 @@ public class ProductDbHelper  extends SQLiteOpenHelper {
                 ProductEntry.COLUMN_PRODUCT_QUANTITY + " INTEGER NOT NULL DEFAULT 0," +
                 ProductEntry.COLUMN_PRODUCT_PRICE + " REAL NOT NULL," +
                 ProductEntry.COLUMN_PRODUCT_PHOTO_URI + " TEXT NOT NULL DEFAULT 'no image'," +
-                ProductEntry.COLUMN_SUPPLIER_NAME + " TEXT DEFAULT 'unknown'," +
+                ProductEntry.COLUMN_SUPPLIER_NAME + " TEXT," +
                 ProductEntry.COLUMN_SUPPLIER_EMAIL + " TEXT);";
 
         // Execute the database

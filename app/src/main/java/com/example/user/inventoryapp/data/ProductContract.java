@@ -40,6 +40,7 @@ public class ProductContract {
         // Unique ID number for the product (only for use in the database table).
         public static final String _ID = BaseColumns._ID;
 
+        // Declare table rows name constants
         public static final String COLUMN_PRODUCT_NAME = "product_name";
         public static final String COLUMN_PRODUCT_QUANTITY = "quantity";
         public static final String COLUMN_PRODUCT_PRICE = "price";

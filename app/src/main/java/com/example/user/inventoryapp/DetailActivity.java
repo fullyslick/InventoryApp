@@ -40,8 +40,7 @@ import java.util.regex.Pattern;
  * Created by Alexander Rashkov on 12.07.17.
  */
 
-//  Allows user to insert a new product or edit an existing one.
-
+// Allows user to insert a new product or edit an existing one.
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     // Tag for the log messages
@@ -128,6 +127,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // If the intent DOES NOT contain any URI ( null ), then we know that we are
         // creating a new product, because only clicking on ListItem (product) passes any (data) uri
         if (mCurrentProductUri == null) {
+
             // This is a new product, so change the app bar to say "Add a Product"
             setTitle(getString(R.string.detail_activity_title_new_product));
 
@@ -184,11 +184,13 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             }
         });
 
-        // The onTouchListener for the ImageView that holds the products photo
+        // The onTouchListener for the ImageView that holds the product's photo
         // should also perform an intent to the user gallery
         mProductPhotoView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+
+                // This is an edit so update mProductHasChanged
                 mProductHasChanged = true;
 
                 // Call helper method to open user's gallery
@@ -221,10 +223,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // Stores the int value of the quantity in the EditText
         int quantityFromInputInt;
 
+        // if there is no quantity inserted the int value should be 0
         if (quantityFromInputString.isEmpty()) {
-
-            // if there is no quantity inserted the int value should be 0
             quantityFromInputInt = 0;
+
         } else {
 
             // if there is quantity inserted, convert the string value from EditText to int
@@ -247,19 +249,20 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // Stores the int value of the quantity in the EditText
         int quantityFromInputInt;
 
+        // if there is no quantity inserted the int value should be 0
         if (quantityFromInputString.isEmpty()) {
-
-            // if there is no quantity inserted the int value should be 0
             quantityFromInputInt = 0;
+
         } else {
 
-            // if there is quantity inserted, convert the string value from EditText to int
+            // If there is quantity inserted, convert the string value from EditText to int
             quantityFromInputInt = Integer.parseInt(quantityFromInputString);
 
+            // If the quantity is 0 prompt the user to insert a positive value
             if (quantityFromInputInt == 0) {
 
-                // If the quantity is 0 prompt the user to insert a positive value
                 Toast.makeText(this, getString(R.string.enter_positive_product_quantity), Toast.LENGTH_SHORT).show();
+
             } else {
 
                 // Else, decrease the int value of quantity by one, then convert it to string
@@ -295,7 +298,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // Check for empty product name field
         if (TextUtils.isEmpty(productNameString)) {
 
-            // Prompt the user to insert product's name
+            // Prompt the user to insert product's name and escape early
             Toast.makeText(this, getString(R.string.enter_product_name), Toast.LENGTH_SHORT).show();
             return;
         }
@@ -303,28 +306,29 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // Check for empty supplier name field
         if (TextUtils.isEmpty(supplierNameString)) {
 
-            // Prompt the user to insert supplier's name
+            // Prompt the user to insert supplier's name and escape early
             Toast.makeText(this, getString(R.string.enter_supplier_name), Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // Check for empty supplier e-mail field
+        // Check for empty supplier e-mail field and escape early
         if (TextUtils.isEmpty(supplierEmailString)) {
 
-            // Prompt the user to insert supplier's e-mail
+            // Prompt the user to insert supplier's e-mail and escape early
             Toast.makeText(this, getString(R.string.enter_supplier_email), Toast.LENGTH_SHORT).show();
             return;
 
         }
-        // Else, check if the inputted supplier e-mail is in valid format
+
+        // Else, check if the inputted supplier e-mail is in valid format and escape early
         else if (!isEmailValid(supplierEmailString)) {
 
-            // Inform the user that the inserted suppliers e-mail is not properly formated
+            // Inform the user that the inserted suppliers e-mail is not properly formatted and escape early
             Toast.makeText(this, getString(R.string.invalid_supplier_email), Toast.LENGTH_LONG).show();
             return;
         }
 
-        // Check for empty restock quantity field
+        // Check for empty restock quantity field and escape early
         if (TextUtils.isEmpty(restockQuantityString)) {
             Toast.makeText(this, getString(R.string.enter_restock_quantity), Toast.LENGTH_LONG).show();
             return;
@@ -621,7 +625,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // Since no fields were modified and no photo is inserted,
             // we can return early without creating a new product.
             // No need to create ContentValues and no need to do any ContentProvider operations.
-            // Close the activity and escape early
+            // Close the cursor and activity and escape early
             finish();
 
             return;
@@ -786,7 +790,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         // If they are different from 0, then deletion was successfully.
         if (mRowsDeleted != 0) {
 
-            // Show message to inform the user that the pet was deleted
+            // Show message to inform the user that the product was deleted
             Toast.makeText(this, getString(R.string.detail_delete_product_successful), Toast.LENGTH_SHORT).show();
         } else {
 

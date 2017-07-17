@@ -3,7 +3,6 @@ package com.example.user.inventoryapp.data;
 import android.content.ContentProvider;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -13,27 +12,21 @@ import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
 
 import android.util.Log;
 
-import static java.security.AccessController.getContext;
-
 /**
  * Created by Alexander Rashkov on 10.07.17.
  */
 
 public class ProductProvider extends ContentProvider {
 
-    /**
-     * Tag for the log messages
-     */
+    // Tag for the log messages
     public static final String LOG_TAG = ProductProvider.class.getSimpleName();
-    /**
-     * URI matcher code for the content URI for the products table
-     */
+
+    // URI matcher code for the content URI for the products table
     private static final int PRODUCTS = 100;
 
-    /**
-     * URI matcher code for the content URI for a single product in the products table
-     */
+    // URI matcher code for the content URI for a single product in the products table
     private static final int PRODUCT_ID = 101;
+
     /**
      * UriMatcher object to match a content URI to a corresponding code.
      * The input passed into the constructor represents the code to return for the root URI.
@@ -46,10 +39,10 @@ public class ProductProvider extends ContentProvider {
         // The calls to addURI() go here, for all of the content URI patterns that the provider
         // should recognize. All paths added to the UriMatcher have a corresponding code to return
         // when a match is found.
-        // Code for all table selected
+        // Code for the whole table selected
         sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS, PRODUCTS);
 
-        // Code for a single product selected
+        // Code for a single product (row) selected
         sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS + "/#", PRODUCT_ID);
     }
 
@@ -66,7 +59,9 @@ public class ProductProvider extends ContentProvider {
         return true;
     }
 
-    // Perform the query for the given URI. Use the given projection, selection, selection arguments, and sort order.
+    /**
+     * Perform the query for the given URI. Use the given projection, selection, selection arguments, and sort order.
+     */
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
                         String sortOrder) {
@@ -81,21 +76,22 @@ public class ProductProvider extends ContentProvider {
         int match = sUriMatcher.match(uri);
 
         switch (match) {
+
             // If the passed Uri matches the PRODUCTS int, then query all items from the database
+            // Perform the query for the whole table and return the cursor object containing the data
             case PRODUCTS:
-                // Perform the query for the whole table and return the cursor object containing the data
                 cursor = database.query(ProductEntry.TABLE_NAME, projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
 
             // If the passed Uri matches the PRODUCT_ID int, then query only a single row from the database
             case PRODUCT_ID:
+
                 // Extract out the ID of the requested row from the URI
                 selection = ProductEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
 
-                // Perform the query on the table where the _id equals _ID extracted from the passed Uri
-                // return the cursor object containing the data
+                // Perform the query on the table where "selection" contains the ID of the row requested
                 cursor = database.query(ProductEntry.TABLE_NAME, projection, selection, selectionArgs,
                         null, null, sortOrder);
                 break;
@@ -113,26 +109,35 @@ public class ProductProvider extends ContentProvider {
         // If the data at this URI changes, then when know we need to update the Cursor
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
 
+        // Return a cursor object containing the data from the database
         return cursor;
     }
 
-    // Insert data into the database
+    /**
+     * Insert data into the database
+     */
     @Override
     public Uri insert(Uri uri, ContentValues contentValues) {
         final int match = sUriMatcher.match(uri);
 
-        // This method should work only for Uri-s asking for access on the whole database
+        // Insert should work only for Uri prompting selection on the whole database
         switch (match) {
             case PRODUCTS:
+
                 // Calls the insertProduct helper method to insert data into the database
                 return insertProduct(uri, contentValues);
+
+            // Or throw Illegal Exception
             default:
                 throw new IllegalArgumentException("Insertion is not supported for " + uri);
         }
     }
 
-    // Helper method that inserts data into the database and returns the Uri for the inserted row
+    /**
+     * Helper method that inserts data into the database and returns the Uri for the inserted row
+     */
     private Uri insertProduct(Uri uri, ContentValues values) {
+
         // Check that the product name is not null. I think that extraction data from the input may result in
         // inserting an "empty" string, which is different from null.
         // That is why I also check for an "empty" string: length() == 0
@@ -147,15 +152,17 @@ public class ProductProvider extends ContentProvider {
             throw new IllegalArgumentException("Insert Exception! Product requires a price or a positive value!");
         }
 
-        // No need to check other inputs because they have default values, and "suppliers e-mail" can have no value
+        // No need to check other inputs because they "supplier name" and "suppliers e-mail" can have no values
 
         // Get writable database
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
         // Insert the new product with the given values
+        // Return long with the primary key value of the new row
         long id = database.insert(ProductEntry.TABLE_NAME, null, values);
 
-        // If the ID is -1, then the insertion failed. Log an error and return null.
+        // If the the primary key value is -1,
+        // then the insertion failed. Log an error and return null.
         if (id == -1) {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
             return null;
@@ -164,46 +171,54 @@ public class ProductProvider extends ContentProvider {
         // Notify all listeners that the data has changed for the product content URI
         getContext().getContentResolver().notifyChange(uri, null);
 
-        // Once we know the ID of the new row in the table,
-        // assign to new Uri variable, the new URI with the ID appended to the end of it
+        // Once we know the primary key value (id) of the new row in the table,
+        // append it to the uri argument and assign the appended uri to a new Uri variable
         Uri returnedUri = ContentUris.withAppendedId(uri, id);
 
         // This method helps me determine when insert is performed by showing in the logcat,
-        // the number of rows inserted and the new uri
+        // he primary key value of the inserted row, the newly constructed uri
         // and the values passed
-        Log.i(LOG_TAG, "Inserting into the database! The number of row inserted is " + id + "\n" +
-                        " and the new uri is: " + returnedUri + "\n" + " values: " + values);
+        Log.i(LOG_TAG, "Inserting into the database! The primary key value of the new row is " + id + "\n" +
+                " and the new uri is: " + returnedUri + "\n" + " values: " + values);
 
-        return returnedUri ;
+        return returnedUri;
     }
 
+    /**
+     * Updates the database
+     */
     @Override
     public int update(Uri uri, ContentValues contentValues, String selection,
                       String[] selectionArgs) {
 
         // Figure out if the URI matcher can match the URI to a specific code
         final int match = sUriMatcher.match(uri);
+
         switch (match) {
+
+            // If it matches the int for the whole database, do not modify selection & selectionArgs
+            // and call helper method updateProduct()
             case PRODUCTS:
-                // If it matches the int for the whole database, do not modify selection & selectionArgs
-                // and call helper method updateProduct()
                 return updateProduct(uri, contentValues, selection, selectionArgs);
+
+            // It it matches the int for a single row, provide a selection & selectionArgs
+            // Extract out the ID of the requested row from the URI
             case PRODUCT_ID:
-                // It it matches the int for a single row, provide a selection & selectionArgs
-                // Extract out the ID of the requested row from the URI
                 selection = ProductEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
 
                 // Now call helper method updateProduct()
                 return updateProduct(uri, contentValues, selection, selectionArgs);
+
             default:
+
                 // If the Uri do not match the int templates throw an exception
                 throw new IllegalArgumentException("Update is not supported for " + uri);
         }
     }
 
-    // Helper method that sends command to the database to perform an update
-    // Returns the number of rows that have been updated
+    // Helper method that sends SQL command to the database to perform an update.
+    // Returns the number of rows that have been updated.
     private int updateProduct(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
 
         // Check if product_name column key is present,
@@ -212,8 +227,9 @@ public class ProductProvider extends ContentProvider {
         // That is why I also check for an "empty" string: length() == 0
         if (values.containsKey(ProductEntry.COLUMN_PRODUCT_NAME)) {
             String productName = values.getAsString(ProductEntry.COLUMN_PRODUCT_NAME);
+
+            // If there is no product name, do not try to update database
             if (productName == null || productName.length() == 0) {
-                // If there is no product name, do not try to update database
                 return 0;
             }
         }
@@ -221,15 +237,17 @@ public class ProductProvider extends ContentProvider {
         // Check if product_price column key is present,
         // and that its value is not null or negative
         if (values.containsKey(ProductEntry.COLUMN_PRODUCT_PRICE)) {
+
             // Check that the price is not null or not a negative number
             Float price = values.getAsFloat(ProductEntry.COLUMN_PRODUCT_PRICE);
+
+            // If there is no price for the product or it is a negative value, do not try to update database
             if (price == null || price < 0) {
-                // If there is no price for the product or it is a negative value, do not try to update database
                 return 0;
             }
         }
 
-        // No need to check other inputs because they have default values, and "suppliers e-mail" can have no value
+        // No need to check other inputs because "supplier" and "suppliers e-mail" can have no values
 
         // If there are no values to update, then don't try to update the database
         if (values.size() == 0) {
@@ -250,7 +268,7 @@ public class ProductProvider extends ContentProvider {
 
         // This method helps me determine when update is performed by showing in the logcat,
         // the number of rows updated
-        Log.i(LOG_TAG, "Updating the database! The number of rows updated is: " + rowsUpdated );
+        Log.i(LOG_TAG, "Updating the database! The number of rows updated is: " + rowsUpdated);
 
         // Return the number of rows updated
         return rowsUpdated;
@@ -259,6 +277,7 @@ public class ProductProvider extends ContentProvider {
     // Delete the data at the given selection and selection arguments.
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
+
         // Get writable database
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
 
@@ -269,16 +288,17 @@ public class ProductProvider extends ContentProvider {
         final int match = sUriMatcher.match(uri);
 
         switch (match) {
+
+            // If it matches the int for the whole database, do not modify selection & selectionArgs
+            // Execute an SQLite command to delete the whole database rows
             case PRODUCTS:
-                // If it matches the int for the whole database, do not modify selection & selectionArgs
-                // Execute an SQLite command to delete the whole database rows
                 rowsDeleted = database.delete(ProductEntry.TABLE_NAME, selection, selectionArgs);
                 break;
 
+            // If it matches the int for a single row or rows,
+            // modify selection & selectionArgs to get the id of the row
+            // Extract out the ID of the requested row from the URI
             case PRODUCT_ID:
-                // If it matches the int for a single row or rows,
-                // modify selection & selectionArgs to get the id of the row
-                // Extract out the ID of the requested row from the URI
                 selection = ProductEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
 
@@ -299,7 +319,7 @@ public class ProductProvider extends ContentProvider {
 
         // This method helps me determine when delete is performed by showing in the logcat,
         // the number of rows deleted
-        Log.i(LOG_TAG, "Deleting from database! The number of rows deleted is: " + rowsDeleted );
+        Log.i(LOG_TAG, "Deleting from database! The number of rows deleted is: " + rowsDeleted);
 
         // Return the number of rows deleted
         return rowsDeleted;
@@ -312,6 +332,7 @@ public class ProductProvider extends ContentProvider {
      */
     @Override
     public String getType(Uri uri) {
+
         // Figure out if the URI matcher can match the URI to a specific code
         final int match = sUriMatcher.match(uri);
 

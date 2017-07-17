@@ -6,7 +6,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,9 +27,6 @@ import com.example.user.inventoryapp.data.ProductContract.ProductEntry;
  * how to create list items for each row of product data in the {@link Cursor}.
  */
 public class ProductCursorAdapter extends CursorAdapter {
-
-    // Tag for the log messages
-    public static final String LOG_TAG = MainActivity.class.getSimpleName();
 
     // This ImageView object will hold the reference to the ImageView that holds
     // the photo of the product in the ListItem
@@ -104,8 +100,6 @@ public class ProductCursorAdapter extends CursorAdapter {
         // First, get the string value for the image uri from the database,
         // and later if it is different from default string, convert it to uri
         String productImageString = cursor.getString(cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PHOTO_URI));
-
-        Log.i(LOG_TAG, "The product String is:" + productImageString);
 
         // Check if productImageString is equal to the default value, set a drawable resource
         // This should work only when dummy data is inserted
