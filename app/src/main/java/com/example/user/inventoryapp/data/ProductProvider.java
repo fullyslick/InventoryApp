@@ -218,6 +218,8 @@ public class ProductProvider extends ContentProvider {
             }
         }
 
+        // Check if product_price column key is present,
+        // and that its value is not null or negative
         if (values.containsKey(ProductEntry.COLUMN_PRODUCT_PRICE)) {
             // Check that the price is not null or not a negative number
             Float price = values.getAsFloat(ProductEntry.COLUMN_PRODUCT_PRICE);

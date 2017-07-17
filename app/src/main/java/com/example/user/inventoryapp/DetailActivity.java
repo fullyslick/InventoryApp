@@ -243,12 +243,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // if there is quantity inserted, convert the string value from EditText to int
             quantityFromInputInt = Integer.parseInt(quantityFromInputString);
 
-            if(quantityFromInputInt == 0){
+            if (quantityFromInputInt == 0) {
 
                 // If the quantity is 0 prompt the user to insert a positive value
                 Toast.makeText(this, getString(R.string.enter_positive_product_quantity), Toast.LENGTH_SHORT).show();
-            }
-            else{
+            } else {
 
                 // Else, decrease the int value of quantity by one, then convert it to string
                 // and set it as text to the EditText view, containing the quantity of the product
@@ -451,7 +450,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             case R.id.action_delete:
 
                 // Call delete confirmation dialog and from it call deleteProduct() method
-                // TO:DO
+                showDeleteConfirmationDialog();
 
                 return true;
 
@@ -562,7 +561,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // So prompt the user to select a photo for the product.
             Toast.makeText(this, getString(R.string.enter_product_photo), Toast.LENGTH_LONG).show();
             return;
-
         }
 
         // Create a new map of values, where column names are the keys
@@ -609,6 +607,76 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 finish();
             }
         }
+    }
+
+    // This method shows alert dialog before deleting a product.
+    // On click of positive ("Delete") button a helper method deleteProduct() is called.
+    private void showDeleteConfirmationDialog() {
+
+        // Build an alert dialog object and set it a message
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(R.string.delete_dialog_msg);
+
+        // Create an on click listener for the positive button ("Delete")
+        // calling the helper method deleteProduct()
+        builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+
+                // User clicked the "Delete" button, so delete the product.
+                deleteProduct();
+            }
+        });
+
+        // Set title and on click listener for the negative button ("Cancel")
+        builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+
+                // User clicked the "Cancel" button, so dismiss the dialog
+                // and continue editing the product.
+                if (dialog != null) {
+                    dialog.dismiss();
+                }
+            }
+        });
+
+        // Create and show the AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    /**
+     * Helper method that deletes product from the database
+     */
+    private void deleteProduct() {
+
+        // Stores the number of rows that are deleted
+        int mRowsDeleted = 0;
+
+        // Only perform the delete if this is an existing product.
+        if (mCurrentProductUri != null) {
+
+            // Deletes the product that match the selection criteria
+            mRowsDeleted = getContentResolver().delete(
+                    mCurrentProductUri,     // URI of the rproduct we want ot delete
+                    null,                   // the column to select on
+                    null                    // the value to compare to
+            );
+        }
+
+        // Check if the product was successfully deleted, by checking the number of rows deleted.
+        // If they are different from 0, then deletion was successfully.
+        if (mRowsDeleted != 0) {
+
+            // Show message to inform the user that the pet was deleted
+            Toast.makeText(this, getString(R.string.detail_delete_product_successful), Toast.LENGTH_SHORT).show();
+        } else {
+
+            // Show message to inform the user that the app was not able to delete the product
+            Toast.makeText(this, getString(R.string.detail_delete_product_failed), Toast.LENGTH_SHORT).show();
+        }
+
+        // Call finish to close the cursor and return to previous activity
+        finish();
     }
 
     // This method is called when the physical back button is pressed.
