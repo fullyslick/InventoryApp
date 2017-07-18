@@ -93,8 +93,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override
     protected void onStart() {
-
-        Log.i(LOG_TAG, "onStart is called");
         super.onStart();
     }
 

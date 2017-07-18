@@ -101,9 +101,6 @@ public class ProductProvider extends ContentProvider {
                 throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
 
-        // This method helps me determine when query is performed by showing the uri inserted in logcat
-        Log.i(LOG_TAG, "Querying the database. The uri passed for querying is:" + uri);
-
         // Set notification URI on the Cursor,
         // so we know what content URI the Cursor was created for.
         // If the data at this URI changes, then when know we need to update the Cursor
@@ -152,7 +149,8 @@ public class ProductProvider extends ContentProvider {
             throw new IllegalArgumentException("Insert Exception! Product requires a price or a positive value!");
         }
 
-        // No need to check other inputs because they "supplier name" and "suppliers e-mail" can have no values
+        // No need to check other inputs because they have default values and
+        // "supplier name" and "suppliers e-mail" can have no values
 
         // Get writable database
         SQLiteDatabase database = mDbHelper.getWritableDatabase();
@@ -174,12 +172,6 @@ public class ProductProvider extends ContentProvider {
         // Once we know the primary key value (id) of the new row in the table,
         // append it to the uri argument and assign the appended uri to a new Uri variable
         Uri returnedUri = ContentUris.withAppendedId(uri, id);
-
-        // This method helps me determine when insert is performed by showing in the logcat,
-        // he primary key value of the inserted row, the newly constructed uri
-        // and the values passed
-        Log.i(LOG_TAG, "Inserting into the database! The primary key value of the new row is " + id + "\n" +
-                " and the new uri is: " + returnedUri + "\n" + " values: " + values);
 
         return returnedUri;
     }
@@ -266,10 +258,6 @@ public class ProductProvider extends ContentProvider {
             getContext().getContentResolver().notifyChange(uri, null);
         }
 
-        // This method helps me determine when update is performed by showing in the logcat,
-        // the number of rows updated
-        Log.i(LOG_TAG, "Updating the database! The number of rows updated is: " + rowsUpdated);
-
         // Return the number of rows updated
         return rowsUpdated;
     }
@@ -316,10 +304,6 @@ public class ProductProvider extends ContentProvider {
         if (rowsDeleted != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
-
-        // This method helps me determine when delete is performed by showing in the logcat,
-        // the number of rows deleted
-        Log.i(LOG_TAG, "Deleting from database! The number of rows deleted is: " + rowsDeleted);
 
         // Return the number of rows deleted
         return rowsDeleted;

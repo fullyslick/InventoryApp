@@ -94,7 +94,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     // EditText field to enter supplier for the product
     private EditText mSupplierEmailEditText;
 
-
     //EditText field to enter restock quantity
     private EditText mRestockQuantityEditText;
 
@@ -124,9 +123,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
 
         // Get the data from the intent and assign it to mCurrentProductUri
         mCurrentProductUri = intent.getData();
-
-        // Show me in the logcat the uri extracted from the intent
-        Log.i(LOG_TAG, "The passed uri from MainActivity is: " + mCurrentProductUri);
 
         // If the intent DOES NOT contain any URI ( null ), then we know that we are
         // creating a new product, because only clicking on ListItem (product) passes any (data) uri
@@ -458,9 +454,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             if (resultData != null) {
                 mProductPhotoUri = resultData.getData();
 
-                // Let me check ih the logcat the uri that was picked from intent
-                Log.i(LOG_TAG, "The Uri of picked photo from the user's gallery is: " + mProductPhotoUri.toString());
-
                 // These lines solved the problem with user permission on restart of the emulator
                 // Now all the products' photos can be successfully displayed on device restart
                 int takeFlags = resultData.getFlags();
@@ -676,7 +669,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         }
 
         // Check for empty image of the product
-        if (mProductPhotoUri == null ) {
+        if (mProductPhotoUri == null) {
 
             // If there is no uri for the photo of the product, then the user have not selected one yet.
             // So prompt the user to select a photo for the product.
@@ -688,7 +681,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mProductPhotoString = mProductPhotoUri.toString();
 
         // Check for default drawable image of a dummy product
-        if ( mProductPhotoString.equals("no image")){
+        if (mProductPhotoString.equals("no image")) {
 
             // If this is a dummy product with a default drawable, then
             // prompt the user to select a photo for the product
@@ -746,10 +739,6 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
                 // The insert was successful so close this activity
                 finish();
             }
-
-            // Show in the log cat the key of the new inserted row
-            Log.i(LOG_TAG, "The new inserted row key is: " + returnedUri);
-
         } else {
 
             // Update the existing product
