@@ -673,15 +673,23 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             }
         }
 
-        // Convert the photo uri to string, because DB accepts strings not uris.
-        mProductPhotoString = mProductPhotoUri.toString();
-
         // Check for empty image of the product
-        // Check for default drawable image of a dummy product
-        if (mProductPhotoUri == null || mProductPhotoString.equals("no image")) {
+        if (mProductPhotoUri == null ) {
 
             // If there is no uri for the photo of the product, then the user have not selected one yet.
             // So prompt the user to select a photo for the product.
+            Toast.makeText(this, getString(R.string.enter_product_photo), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Convert the photo uri to string, because DB accepts strings not uris.
+        mProductPhotoString = mProductPhotoUri.toString();
+
+        // Check for default drawable image of a dummy product
+        if ( mProductPhotoString.equals("no image")){
+
+            // If this is a dummy product with a default drawable, then
+            // prompt the user to select a photo for the product
             Toast.makeText(this, getString(R.string.enter_product_photo), Toast.LENGTH_LONG).show();
             return;
         }
