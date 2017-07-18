@@ -94,6 +94,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     // EditText field to enter supplier for the product
     private EditText mSupplierEmailEditText;
 
+
+    //EditText field to enter restock quantity
+    private EditText mRestockQuantityEditText;
+
     // Button that increases product's quantity
     private Button mIncreaseQuantityButton;
 
@@ -154,6 +158,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         mSupplierEmailEditText = (EditText) findViewById(R.id.edit_suppliers_email);
         mIncreaseQuantityButton = (Button) findViewById(R.id.increase_button);
         mDecreaseQuantityButton = (Button) findViewById(R.id.decrease_button);
+        mRestockQuantityEditText = (EditText) findViewById(R.id.edit_restock_quantity);
 
         // Attach onTouchListener to these views
         mProductNameEditText.setOnTouchListener(mTouchListener);
@@ -286,14 +291,11 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             return;
         }
 
-        // Inflate the restock quantity EditText view
-        EditText restockQuantityEditText = (EditText) findViewById(R.id.edit_restock_quantity);
-
         // Get the input from the EditTexts
         String productNameString = mProductNameEditText.getText().toString().trim();
         String supplierNameString = mSupplierNameEditText.getText().toString().trim();
         String supplierEmailString = mSupplierEmailEditText.getText().toString().trim();
-        String restockQuantityString = restockQuantityEditText.getText().toString().trim();
+        String restockQuantityString = mRestockQuantityEditText.getText().toString().trim();
 
         // Check for empty product name field
         if (TextUtils.isEmpty(productNameString)) {
@@ -691,6 +693,31 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             // If this is a dummy product with a default drawable, then
             // prompt the user to select a photo for the product
             Toast.makeText(this, getString(R.string.enter_product_photo), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        // Check for empty supplier name field
+        if (TextUtils.isEmpty(supplierNameString)) {
+
+            // Prompt the user to insert supplier's name and escape early
+            Toast.makeText(this, getString(R.string.enter_supplier_name), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Check for empty supplier e-mail field and escape early
+        if (TextUtils.isEmpty(supplierEmailString)) {
+
+            // Prompt the user to insert supplier's e-mail and escape early
+            Toast.makeText(this, getString(R.string.enter_supplier_email), Toast.LENGTH_SHORT).show();
+            return;
+
+        }
+
+        // Else, check if the inputted supplier e-mail is in valid format and escape early
+        else if (!isEmailValid(supplierEmailString)) {
+
+            // Inform the user that the inserted suppliers e-mail is not properly formatted and escape early
+            Toast.makeText(this, getString(R.string.invalid_supplier_email), Toast.LENGTH_LONG).show();
             return;
         }
 
